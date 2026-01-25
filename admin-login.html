@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control | Simba Express</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #020617);
+        }
+        .admin-glass { 
+            background: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #dc2626 100%);
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-600 rounded-3xl shadow-2xl shadow-red-900/40 mb-6">
+                <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
+            </div>
+            <h1 class="text-4xl font-black italic tracking-tighter uppercase text-white">
+                COMMAND <span class="text-red-600">CENTER</span>
+            </h1>
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] mt-2">Internal Access Only</p>
+        </div>
+
+        <div class="admin-glass rounded-[40px] shadow-2xl overflow-hidden p-10">
+            <div id="authMessage" class="hidden mb-6 p-4 bg-red-900/20 border border-red-900/50 rounded-2xl text-red-400 text-xs font-bold flex items-center gap-3">
+                <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                <span id="authErrorText">Access Denied.</span>
+            </div>
+
+            <form id="adminLoginForm" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Admin Identity</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-4 top-3.5 w-5 h-5 text-slate-600"></i>
+                        <input type="email" id="admin-email" placeholder="admin@simbaexpress.co.tz" required 
+                            class="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-slate-800 rounded-2xl text-white outline-none focus:border-red-600 transition-all">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Access Key</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-3.5 w-5 h-5 text-slate-600"></i>
+                        <input type="password" id="admin-password" placeholder="••••••••" required 
+                            class="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-slate-800 rounded-2xl text-white outline-none focus:border-red-600 transition-all">
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="shimmer w-full py-5 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-3">
+                    <span>Unlock Systems</span>
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-8 flex justify-center gap-6">
+            <div class="flex items-center gap-2 text-slate-600 text-[10px] font-bold uppercase">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Server Online
+            </div>
+            <div class="text-slate-600 text-[10px] font-bold uppercase">v2.0.4 Secure</div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        console.log('Admin login page loaded');
+        console.log('Supabase client:', window.supabaseClient);
+
+        const loginForm = document.getElementById('adminLoginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('authMessage');
+        const errorText = document.getElementById('authErrorText');
+
+        if (!loginForm || !loginBtn) {
+            console.error('Form or button not found');
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            errorMessage.classList.add('hidden');
+            errorText.innerText = '';
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>`;
+
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            console.log('Attempting login for:', email);
+
+            if (!window.supabaseClient) {
+                console.error('Supabase client not available');
+                errorMessage.classList.remove('hidden');
+                errorText.innerText = "Supabase not initialized. Please refresh the page.";
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                lucide.createIcons();
+                return;
+            }
+
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+            console.log('Auth response:', { data, error });
+
+            if (error) {
+                console.error('Auth error:', error);
+                errorMessage.classList.remove('hidden');
+                errorText.innerText = error.message || "Invalid Admin Credentials.";
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                lucide.createIcons();
+                return;
+            }
+
+            console.log('Authentication successful, checking profile...');
+            
+            // Wait for Supabase session to update and check admin table
+            let tries = 0;
+            const maxTries = 40;
+            async function checkUserAndRedirect() {
+                try {
+                    console.log(`Admin check attempt ${tries + 1}/${maxTries}`);
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    console.log('Current user:', user?.email);
+                    
+                    if (user && user.email) {
+                        console.log('User authenticated, querying admin table...');
+                        
+                        // Query admin table
+                        const { data: adminRecord, error: adminError } = await window.supabaseClient
+                            .from('admin')
+                            .select('*')
+                            .eq('email', user.email)
+                            .maybeSingle();
+                        
+                        console.log('Admin query result:', { adminRecord, adminError });
+                        
+                        if (adminError) {
+                            console.error('Admin table query error:', adminError);
+                            errorMessage.classList.remove('hidden');
+                            errorText.innerText = "Database error: " + adminError.message;
+                            await window.supabaseClient.auth.signOut();
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                            lucide.createIcons();
+                            return;
+                        }
+                        
+                        if (adminRecord && adminRecord.status === 'active') {
+                            console.log('Admin found and active, redirecting to admin-dash.html');
+                            // Store admin info in localStorage for dashboard use
+                            localStorage.setItem('adminInfo', JSON.stringify(adminRecord));
+                            window.location.href = 'admin-dash.html';
+                        } else if (tries < maxTries) {
+                            tries++;
+                            console.log('Admin record not found or not active, retrying...');
+                            setTimeout(checkUserAndRedirect, 300);
+                        } else {
+                            console.error('Max retries reached, admin not found');
+                            errorMessage.classList.remove('hidden');
+                            errorText.innerText = "You are not authorized as an admin. Contact system administrator.";
+                            await window.supabaseClient.auth.signOut();
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                            lucide.createIcons();
+                        }
+                    } else if (tries < maxTries) {
+                        tries++;
+                        console.log('No user authenticated yet, retrying...');
+                        setTimeout(checkUserAndRedirect, 300);
+                    } else {
+                        console.error('Max retries reached, authentication failed');
+                        errorMessage.classList.remove('hidden');
+                        errorText.innerText = "Authentication failed. Please try again.";
+                        await window.supabaseClient.auth.signOut();
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                        lucide.createIcons();
+                    }
+                } catch (err) {
+                    console.error('Unexpected error:', err);
+                    errorMessage.classList.remove('hidden');
+                    errorText.innerText = "Unexpected error: " + err.message;
+                    await window.supabaseClient.auth.signOut();
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = `<span>Unlock Systems</span><i data-lucide='key' class='w-5 h-5'></i>`;
+                    lucide.createIcons();
+                }
+            }
+            checkUserAndRedirect();
+        });
+    </script>
+</body>
+</html>

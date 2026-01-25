@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Portal | Simba Express</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+        }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center bg-white p-4 rounded-2xl shadow-xl mb-4 border border-slate-700">
+                <i data-lucide="store" class="w-10 h-10 text-red-600"></i>
+            </div>
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase text-white">
+                Merchant <span class="text-red-600">Portal</span>
+            </h1>
+            <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-widest">Retail Partner Network</p>
+        </div>
+
+        <div class="glass rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+            <div class="p-8">
+                <div class="flex bg-gray-100 p-1 rounded-xl mb-8">
+                    <button onclick="switchTab('login')" id="tab-login" class="w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg bg-white shadow-sm transition-all">Ingia / Login</button>
+                    <button onclick="switchTab('register')" id="tab-register" class="w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg text-gray-500 transition-all">Jisajili / Join</button>
+                </div>
+                
+                <div id="authMessage" class="hidden mb-6 p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs font-bold flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span id="authErrorText">Error message.</span>
+                </div>
+
+                <form id="loginForm" class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Business Email</label>
+                        <input type="email" id="login-email" placeholder="mfano@duka.co.tz" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Nenosiri</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition text-sm">
+                    </div>
+                    <button type="submit" id="loginBtn" class="w-full bg-slate-900 text-white font-black uppercase tracking-widest py-4 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2 shadow-lg">
+                        <span>Ingia Kwenye Dashboard</span>
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    </button>
+                    <div class="text-center">
+                        <button type="button" onclick="openForgotPasswordModal()" class="text-red-600 text-xs font-bold hover:underline">Umesahau Nenosiri?</button>
+                    </div>
+                </form>
+
+                <!-- Forgot Password Modal -->
+                <div id="forgotPasswordModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-black uppercase tracking-widest text-gray-900">Kurudisha Nenosiri</h2>
+                            <button type="button" onclick="closeForgotPasswordModal()" class="text-gray-500 hover:text-gray-700">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        
+                        <p class="text-xs text-gray-600 mb-4">Ingiza barua pepe yako na tutatuma ujumbe wa kurudisha nenosiri</p>
+                        
+                        <div id="resetMessage" class="hidden p-3 rounded-lg mb-4 text-xs font-bold"></div>
+                        
+                        <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Email Address</label>
+                                <input type="email" id="resetEmail" placeholder="business@simba.com" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition text-sm">
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 text-white font-black uppercase tracking-widest py-3 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2">
+                                <span>Tuma ujumbe wa kurudisha</span>
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                        
+                        <button type="button" onclick="closeForgotPasswordModal()" class="w-full mt-3 bg-gray-100 text-gray-700 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-gray-200 transition-all">
+                            Ghairi
+                        </button>
+                    </div>
+                </div>
+
+                <form id="registerForm" class="hidden space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Store / Business Name</label>
+                        <input type="text" id="reg-store" placeholder="Jina la Biashara" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Partner Type</label>
+                        <select id="reg-partner-type" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none appearance-none">
+                            <option value="">-- Select Partner Type --</option>
+                            <option value="wholesale">Wholesale (Jumla)</option>
+                            <option value="manufacturer">Manufacturer (Mtengenezaji)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Phone Number</label>
+                        <input type="tel" id="reg-phone" placeholder="+255 123 456 789" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Location / Address</label>
+                        <input type="text" id="reg-location" placeholder="Jiji, Kanda (e.g., Dar es Salaam, DSM)" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+                    </div>
+                    <button type="button" id="getLocationBtn" class="w-full bg-blue-500 text-white font-bold uppercase tracking-widest py-2 rounded-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        <span>Get Live Location</span>
+                    </button>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Email</label>
+                        <input type="email" id="reg-email" placeholder="business@simba.com" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1">Password</label>
+                        <input type="password" id="reg-password" placeholder="Tengeneza nenosiri" required class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm">
+                    </div>
+                    <button type="submit" id="regBtn" class="w-full bg-red-600 text-white font-black uppercase tracking-widest py-4 rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg">
+                        <span>Omba Ubia Sasa</span>
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-8 text-gray-500 text-[10px] font-bold uppercase tracking-widest">&copy; 2026 Simba Express Merchant Network</p>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        console.log('Merchant login page loaded');
+
+        function switchTab(type) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+
+            if (type === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.className = "w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg bg-white shadow-sm transition-all";
+                tabRegister.className = "w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg text-gray-500 transition-all";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegister.className = "w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg bg-white shadow-sm transition-all";
+                tabLogin.className = "w-1/2 py-2 text-xs font-black uppercase tracking-widest rounded-lg text-gray-500 transition-all";
+            }
+        }
+
+        // Get Live Location
+        document.getElementById('getLocationBtn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        document.getElementById('reg-location').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        showSuccess(`Location captured: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    },
+                    (error) => {
+                        showError('Could not get location. Please enter manually.');
+                    }
+                );
+            } else {
+                showError('Geolocation not supported in your browser.');
+            }
+        });
+
+        // Handle Registration - with Supabase check
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Wait for Supabase to be ready
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+
+            if (!window.supabaseClient) {
+                showError('Supabase not initialized. Please refresh the page.');
+                return;
+            }
+
+            const btn = document.getElementById('regBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>`;
+
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const store_name = document.getElementById('reg-store').value;
+            const partner_type = document.getElementById('reg-partner-type').value;
+            const phone = document.getElementById('reg-phone').value;
+            const location = document.getElementById('reg-location').value;
+
+            console.log('Registering merchant:', { email, store_name, partner_type, phone, location });
+
+            // Step 1: Create auth account
+            const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (authError) {
+                console.error('Auth error:', authError);
+                showError('Error creating account: ' + authError.message);
+                btn.disabled = false;
+                btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                return;
+            }
+
+            console.log('Auth account created:', authData);
+
+            // Step 2: Insert into merchant table
+            const { data: merchantData, error: merchantError } = await window.supabaseClient
+                .from('merchant')
+                .insert([
+                    {
+                        email: email,
+                        store_name: store_name,
+                        partner_type: partner_type,
+                        phone: phone,
+                        location: location,
+                        status: 'active',
+                        role: 'user'
+                    }
+                ]);
+
+            if (merchantError) {
+                console.error('Merchant insert error:', merchantError);
+                showError('Error creating merchant profile: ' + merchantError.message);
+                btn.disabled = false;
+                btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                return;
+            }
+
+            console.log('Merchant profile created:', merchantData);
+            showSuccess('Ombi lako limepokelewa! Tafadhali thibitisha barua pepe yako.');
+            
+            setTimeout(() => {
+                switchTab('login');
+                btn.disabled = false;
+                btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+            }, 2000);
+        });
+
+        // Handle Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Wait for Supabase to be ready
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+
+            if (!window.supabaseClient) {
+                showError('Supabase not initialized. Please refresh the page.');
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>`;
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            console.log('Attempting login for:', email);
+
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                console.error('Login error:', error);
+                showError('Barua pepe au nenosiri si sahihi.');
+                btn.disabled = false;
+                btn.innerHTML = `<span>Ingia Kwenye Dashboard</span> <i data-lucide="layout-dashboard" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                return;
+            }
+
+            console.log('Login successful, checking merchant profile...');
+
+            // Check merchant profile
+            let tries = 0;
+            const maxTries = 40;
+            async function checkMerchantAndRedirect() {
+                try {
+                    console.log(`Merchant check attempt ${tries + 1}/${maxTries}`);
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    console.log('Current user:', user?.email);
+
+                    if (user && user.email) {
+                        // Query merchant table
+                        const { data: merchantRecord, error: merchantError } = await window.supabaseClient
+                            .from('merchant')
+                            .select('*')
+                            .eq('email', user.email)
+                            .maybeSingle();
+
+                        console.log('Merchant query result:', { merchantRecord, merchantError });
+
+                        if (merchantError) {
+                            console.error('Merchant query error:', merchantError);
+                            showError('Database error: ' + merchantError.message);
+                            await window.supabaseClient.auth.signOut();
+                            btn.disabled = false;
+                            btn.innerHTML = `<span>Ingia Kwenye Dashboard</span> <i data-lucide="layout-dashboard" class="w-4 h-4"></i>`;
+                            lucide.createIcons();
+                            return;
+                        }
+
+                        if (merchantRecord && merchantRecord.status === 'active') {
+                            console.log('Merchant found and active, redirecting...');
+                            localStorage.setItem('merchantInfo', JSON.stringify(merchantRecord));
+                            window.location.href = 'merchant-dash.html';
+                        } else if (tries < maxTries) {
+                            tries++;
+                            console.log('Merchant record not found yet, retrying...');
+                            setTimeout(checkMerchantAndRedirect, 300);
+                        } else {
+                            console.error('Max retries reached, merchant not found');
+                            showError('Akaunti yako haijakamilika. Tafadhali jisajili kwanza.');
+                            await window.supabaseClient.auth.signOut();
+                            btn.disabled = false;
+                            btn.innerHTML = `<span>Ingia Kwenye Dashboard</span> <i data-lucide="layout-dashboard" class="w-4 h-4"></i>`;
+                            lucide.createIcons();
+                        }
+                    } else if (tries < maxTries) {
+                        tries++;
+                        console.log('No user authenticated yet, retrying...');
+                        setTimeout(checkMerchantAndRedirect, 300);
+                    } else {
+                        console.error('Max retries reached');
+                        showError('Login failed. Please try again.');
+                        await window.supabaseClient.auth.signOut();
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Ingia Kwenye Dashboard</span> <i data-lucide="layout-dashboard" class="w-4 h-4"></i>`;
+                        lucide.createIcons();
+                    }
+                } catch (err) {
+                    console.error('Unexpected error:', err);
+                    showError('Unexpected error: ' + err.message);
+                    await window.supabaseClient.auth.signOut();
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Ingia Kwenye Dashboard</span> <i data-lucide="layout-dashboard" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                }
+            }
+            checkMerchantAndRedirect();
+        });
+
+        function showError(msg) {
+            const errDiv = document.getElementById('authMessage');
+            document.getElementById('authErrorText').innerText = msg;
+            errDiv.classList.remove('hidden');
+            errDiv.className = 'p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs font-bold flex items-center gap-2';
+        }
+
+        function showSuccess(msg) {
+            const errDiv = document.getElementById('authMessage');
+            document.getElementById('authErrorText').innerText = msg;
+            errDiv.classList.remove('hidden');
+            errDiv.className = 'p-3 bg-green-50 border-l-4 border-green-600 text-green-700 text-xs font-bold flex items-center gap-2';
+        }
+
+        // Forgot Password Modal Functions
+        function openForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').reset();
+            document.getElementById('resetMessage').classList.add('hidden');
+        }
+
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            const btn = e.target.querySelector('button');
+            const msgDiv = document.getElementById('resetMessage');
+            
+            if (!email) {
+                msgDiv.className = 'p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs font-bold mb-3';
+                msgDiv.innerText = 'Tafadhali ingiza email yako';
+                msgDiv.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Inatuma...';
+
+            try {
+                const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email);
+                
+                if (error) {
+                    msgDiv.className = 'p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs font-bold mb-3';
+                    msgDiv.innerText = error.message || 'Kosa katika kusanya ujumbe wa kurudisha nenosiri';
+                } else {
+                    msgDiv.className = 'p-3 bg-green-50 border-l-4 border-green-600 text-green-700 text-xs font-bold mb-3';
+                    msgDiv.innerText = 'Ujumbe wa kurudisha nenosiri umekuwa umechukuliwa. Angalia barua yako!';
+                    document.getElementById('forgotPasswordForm').reset();
+                    setTimeout(() => closeForgotPasswordModal(), 3000);
+                }
+                msgDiv.classList.remove('hidden');
+            } catch (err) {
+                msgDiv.className = 'p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs font-bold mb-3';
+                msgDiv.innerText = 'Kosa katika kuwasiliana na seva. Jaribu tena.';
+                msgDiv.classList.remove('hidden');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Tuma ujumbe wa kurudisha';
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('forgotPasswordModal');
+            if (event.target === modal) {
+                closeForgotPasswordModal();
+            }
+        });
+    </script>
+</body>
+</html>

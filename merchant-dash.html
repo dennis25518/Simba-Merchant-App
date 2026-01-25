@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Dashboard | Simba Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        .radar-scan { animation: radar 2s linear infinite; }
+        @keyframes radar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Sidebar transition and collapse logic */
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
+        #sidebar.collapsed { width: 85px; }
+        #sidebar.collapsed .sidebar-text, #sidebar.collapsed .logo-text { display: none; }
+        #sidebar.collapsed .nav-item { justify-content: center; }
+        
+        .nav-item.active { background: #dc2626; color: white; }
+        .nav-item { transition: all 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex h-screen bg-slate-50">
+
+    <aside id="sidebar" class="bg-slate-900 h-full flex flex-col py-8 shrink-0 relative">
+        <button onclick="toggleSidebar()" class="absolute -right-3 top-10 bg-red-600 text-white rounded-full p-1 shadow-lg z-50">
+            <i data-lucide="chevron-left" id="toggleIcon" class="w-4 h-4"></i>
+        </button>
+
+        <div class="px-6 mb-12 flex items-center gap-3">
+            <i data-lucide="store" class="text-red-600 w-8 h-8 shrink-0"></i>
+            <h1 class="text-white font-black italic text-xl uppercase tracking-tighter logo-text">MERCHANT <span class="text-red-600">HUB</span></h1>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-4">
+            <button onclick="switchTab('orders')" class="nav-item active flex items-center gap-4 p-4 bg-red-600 text-white rounded-2xl w-full">
+                <i data-lucide="inbox" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">New Orders</span>
+            </button>
+            
+            <button onclick="switchTab('processing')" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl w-full transition-all">
+                <i data-lucide="package-check" class="shrink-0"></i>
+                <span class="sidebar-text font-bold">Processing</span>
+            </button>
+
+            <button onclick="switchTab('completed')" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl w-full transition-all">
+                <i data-lucide="check-circle" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Completed</span>
+            </button>
+
+            <button onclick="switchTab('inventory')" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl w-full transition-all">
+                <i data-lucide="boxes" class="shrink-0"></i>
+                <span class="sidebar-text font-bold">Inventory</span>
+            </button>
+        </nav>
+
+        <div class="px-4 mt-auto border-t border-slate-800 pt-6 space-y-2">
+            <button class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="settings" class="shrink-0"></i>
+                <span class="sidebar-text font-bold text-sm">Settings</span>
+            </button>
+            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all group">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0 group-hover:bg-red-600">M</div>
+                <span class="sidebar-text font-bold text-sm">Profile Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto custom-scrollbar">
+        <div class="p-8">
+            <div class="flex justify-between items-end mb-10">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-900">Merchant Portal</h2>
+                    <p class="text-slate-500 font-medium">Welcome back, <span id="merchantName" class="text-red-600 font-bold">Loading...</span></p>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-1">New Orders</p>
+                    <h3 id="count-new" class="text-3xl font-black text-slate-900">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Processing</p>
+                    <h3 id="count-proc" class="text-3xl font-black text-red-600">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Completed Today</p>
+                    <h3 id="count-done" class="text-3xl font-black text-slate-900">0</h3>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="ordersTab" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-slate-900 p-4 flex justify-between items-center">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Incoming Requests</h2>
+                        <span class="bg-red-600 text-white text-[10px] px-2 py-1 rounded-full animate-pulse">Live</span>
+                    </div>
+                    <div id="newOrdersList" class="divide-y divide-slate-100 min-h-[400px] custom-scrollbar overflow-y-auto">
+                        <p class="text-center py-20 text-slate-400 text-sm">No new orders at the moment.</p>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-red-600 p-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Packing & Dispatch</h2>
+                    </div>
+                    <div id="processingList" class="p-4 space-y-4 min-h-[400px] custom-scrollbar overflow-y-auto">
+                        <p class="text-center py-20 text-slate-400 text-sm">No orders processing.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Processing Tab (Hidden by default) -->
+            <div id="processingTab" class="hidden">
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-red-600 p-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Currently Processing Orders</h2>
+                    </div>
+                    <div id="allProcessingList" class="p-6 space-y-4 min-h-[500px]">
+                        <p class="text-center py-20 text-slate-400 text-sm">No orders in processing.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Completed Tab (Hidden by default) -->
+            <div id="completedTab" class="hidden">
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-green-600 p-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Completed Orders Today</h2>
+                    </div>
+                    <div id="completedList" class="p-6 space-y-4 min-h-[500px]">
+                        <p class="text-center py-20 text-slate-400 text-sm">No completed orders today.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Inventory Tab (Hidden by default) -->
+            <div id="inventoryTab" class="hidden">
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-blue-600 p-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Inventory Management</h2>
+                    </div>
+                    <div id="inventoryList" class="p-6 space-y-4 min-h-[500px]">
+                        <p class="text-center py-20 text-slate-400 text-sm">Inventory tracking coming soon.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dispatch Modal -->
+    <div id="dispatchModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[40px] p-8 text-center overflow-hidden relative">
+            <div class="radar-scan absolute -top-20 -left-20 w-64 h-64 border-[20px] border-red-600/5 rounded-full"></div>
+            
+            <div class="relative z-10">
+                <div class="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                    <i id="vehicleIcon" data-lucide="truck" class="text-white w-10 h-10"></i>
+                </div>
+                <h3 id="scanTitle" class="text-xl font-black uppercase italic tracking-tighter mb-2">Scanning Fleet...</h3>
+                <p id="scanSub" class="text-slate-500 text-xs font-medium mb-6">Looking for nearest <span id="targetVehicle" class="text-red-600 font-bold">...</span></p>
+                
+                <div id="scanningUI" class="space-y-4">
+                    <div class="h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-red-600 transition-all duration-[3000ms]" id="scanBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="foundUI" class="hidden animate-bounce">
+                    <div class="bg-green-50 p-4 rounded-2xl border border-green-100 mb-4">
+                        <p class="text-green-600 font-black uppercase text-[10px]">Driver Found!</p>
+                        <p id="driverName" class="text-slate-900 font-black">--</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs">Confirm & Finish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            sidebar.classList.toggle('collapsed');
+            icon.setAttribute('data-lucide', sidebar.classList.contains('collapsed') ? 'chevron-right' : 'chevron-left');
+            lucide.createIcons();
+        }
+
+        function switchTab(tab) {
+            // Hide all tabs
+            document.getElementById('ordersTab').classList.add('hidden');
+            document.getElementById('processingTab').classList.add('hidden');
+            document.getElementById('completedTab').classList.add('hidden');
+            document.getElementById('inventoryTab').classList.add('hidden');
+
+            // Remove active state from all buttons
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab and mark button as active
+            if (tab === 'orders') {
+                document.getElementById('ordersTab').classList.remove('hidden');
+            } else if (tab === 'processing') {
+                document.getElementById('processingTab').classList.remove('hidden');
+            } else if (tab === 'completed') {
+                document.getElementById('completedTab').classList.remove('hidden');
+            } else if (tab === 'inventory') {
+                document.getElementById('inventoryTab').classList.remove('hidden');
+            }
+
+            // Find and activate the clicked button
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        async function handleLogout() {
+            if (window.supabaseClient) {
+                await window.supabaseClient.auth.signOut();
+            }
+            localStorage.removeItem('merchantInfo');
+            window.location.href = 'index.html';
+        }
+
+        // AUTH CHECK
+        async function checkAuth() {
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+
+            if (!window.supabaseClient) {
+                alert('Supabase not initialized. Redirecting to login.');
+                window.location.href = 'merchant-login.html';
+                return;
+            }
+
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user) {
+                alert('Unauthorized. Redirecting to login.');
+                window.location.href = 'merchant-login.html';
+                return;
+            }
+
+            // Get merchant info from localStorage or database
+            const merchantInfo = localStorage.getItem('merchantInfo');
+            if (merchantInfo) {
+                const merchant = JSON.parse(merchantInfo);
+                document.getElementById('merchantName').innerText = merchant.store_name || 'Merchant';
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', checkAuth);
+
+        function closeModal() {
+            document.getElementById('dispatchModal').classList.add('hidden');
+        }
+
+        function getRequiredVehicle(itemCount) {
+            if (itemCount > 50) return { type: 'Suzuki carry', icon: 'truck', label: 'CARRY' };
+            if (itemCount > 10) return { type: 'Toyo tricycle', icon: 'shuttle-cock', label: 'TOYO' };
+            return { type: 'Boda Boda', icon: 'bike', label: 'BODA' };
+        }
+    </script>
+</body>
+</html>
