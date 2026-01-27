@@ -169,7 +169,7 @@
                     .update({
                         order_status: 'pending'
                     })
-                    .neq('id', 'invalid'); // Update all rows
+                    .gte('id', 0); // Update all rows (id is always >= 0)
 
                 if (error) {
                     throw error;
