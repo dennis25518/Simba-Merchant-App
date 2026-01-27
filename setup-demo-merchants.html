@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Demo Merchants</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-setup {
+            background: #667eea;
+            color: white;
+        }
+        .btn-setup:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn-setup:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-admin {
+            background: #f0f4ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        .btn-admin:hover {
+            background: #e8ecff;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            display: none;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+            border: 1px solid #f5c6cb;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .merchant-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 13px;
+            display: none;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Setup Demo Merchants</h1>
+        <p class="subtitle">Initialize your database with 18 demo merchants in Dar es Salaam</p>
+
+        <div class="info-box">
+            <strong>What this does:</strong><br>
+            Inserts 18 merchants with GPS coordinates across Dar es Salaam. These merchants will be used for automatic order routing. This is required before the matching system can work.
+        </div>
+
+        <div class="button-group">
+            <button class="btn-setup" onclick="setupMerchants()">✨ Setup 18 Merchants</button>
+            <button class="btn-admin" onclick="goToAdmin()">→ Go to Admin</button>
+        </div>
+
+        <div id="status" class="status"></div>
+        <div id="merchantStats" class="merchant-stats"></div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        async function setupMerchants() {
+            const btn = document.querySelector('.btn-setup');
+            const status = document.getElementById('status');
+            const statsDiv = document.getElementById('merchantStats');
+
+            btn.disabled = true;
+            status.className = 'status loading';
+            status.innerHTML = '<span class="spinner"></span>Inserting merchants...';
+            statsDiv.style.display = 'none';
+
+            try {
+                // Array of 18 demo merchants with GPS coordinates in Dar es Salaam
+                const merchants = [
+                    // Ilala District
+                    {
+                        email: 'tabata.wholesale@simba.local',
+                        store_name: 'Tabata Wholesale Hub',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 001',
+                        location: 'Tabata, Ilala - City Center',
+                        latitude: -6.80480000,
+                        longitude: 39.23040000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'kariakoo.supplies@simba.local',
+                        store_name: 'Kariakoo Premium Supplies',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 002',
+                        location: 'Kariakoo Market, Ilala',
+                        latitude: -6.81200000,
+                        longitude: 39.22200000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    // Kinondoni District
+                    {
+                        email: 'msasani.traders@simba.local',
+                        store_name: 'Msasani Quality Traders',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 003',
+                        location: 'Msasani Peninsula, Kinondoni',
+                        latitude: -6.76500000,
+                        longitude: 39.28500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'oysterbay.merchant@simba.local',
+                        store_name: 'Oysterbay Express Merchant',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 004',
+                        location: 'Oysterbay, Kinondoni',
+                        latitude: -6.74800000,
+                        longitude: 39.29500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'sinza.distribution@simba.local',
+                        store_name: 'Sinza Distribution Center',
+                        partner_type: 'manufacturer',
+                        phone: '+255 789 123 005',
+                        location: 'Sinza, Kinondoni',
+                        latitude: -6.78500000,
+                        longitude: 39.26500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    // Ubungo District
+                    {
+                        email: 'makumbusho.supplies@simba.local',
+                        store_name: 'Makumbusho Supplies Ltd',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 006',
+                        location: 'Makumbusho, Ubungo',
+                        latitude: -6.84500000,
+                        longitude: 39.19200000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'ubungo.central@simba.local',
+                        store_name: 'Ubungo Central Hub',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 007',
+                        location: 'Ubungo, Dar es Salaam',
+                        latitude: -6.85200000,
+                        longitude: 39.20500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    // Temeke District
+                    {
+                        email: 'temeke.traders@simba.local',
+                        store_name: 'Temeke Fast Traders',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 008',
+                        location: 'Temeke, Dar es Salaam',
+                        latitude: -6.90500000,
+                        longitude: 39.18500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'chalinze.depot@simba.local',
+                        store_name: 'Chalinze Depot',
+                        partner_type: 'warehouse',
+                        phone: '+255 789 123 009',
+                        location: 'Chalinze Junction, Temeke',
+                        latitude: -6.92000000,
+                        longitude: 39.17000000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    // Dar es Salaam - Other Areas
+                    {
+                        email: 'kigamboni.merchant@simba.local',
+                        store_name: 'Kigamboni Merchant Center',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 010',
+                        location: 'Kigamboni, Dar es Salaam',
+                        latitude: -6.81000000,
+                        longitude: 39.37500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'mwananyamala.supply@simba.local',
+                        store_name: 'Mwananyamala Supply House',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 011',
+                        location: 'Mwananyamala, Dar es Salaam',
+                        latitude: -6.73500000,
+                        longitude: 39.22000000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'mikocheni.traders@simba.local',
+                        store_name: 'Mikocheni Traders',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 012',
+                        location: 'Mikocheni, Dar es Salaam',
+                        latitude: -6.77000000,
+                        longitude: 39.33000000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'upanga.premium@simba.local',
+                        store_name: 'Upanga Premium',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 013',
+                        location: 'Upanga, Dar es Salaam',
+                        latitude: -6.79500000,
+                        longitude: 39.31500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'manzese.depot@simba.local',
+                        store_name: 'Manzese Supply Depot',
+                        partner_type: 'warehouse',
+                        phone: '+255 789 123 014',
+                        location: 'Manzese, Dar es Salaam',
+                        latitude: -6.72000000,
+                        longitude: 39.25500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'kijitonyama.merchant@simba.local',
+                        store_name: 'Kijitonyama Merchant',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 015',
+                        location: 'Kijitonyama, Dar es Salaam',
+                        latitude: -6.68500000,
+                        longitude: 39.30000000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'kunduchi.supply@simba.local',
+                        store_name: 'Kunduchi Supply',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 016',
+                        location: 'Kunduchi, Dar es Salaam',
+                        latitude: -6.69000000,
+                        longitude: 39.38500000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'changombe.traders@simba.local',
+                        store_name: 'Changombe Traders Hub',
+                        partner_type: 'wholesale',
+                        phone: '+255 789 123 017',
+                        location: 'Changombe, Dar es Salaam',
+                        latitude: -6.87000000,
+                        longitude: 39.25000000,
+                        status: 'active',
+                        role: 'user'
+                    },
+                    {
+                        email: 'pugu.distribution@simba.local',
+                        store_name: 'Pugu Distribution',
+                        partner_type: 'manufacturer',
+                        phone: '+255 789 123 018',
+                        location: 'Pugu, Dar es Salaam',
+                        latitude: -6.89500000,
+                        longitude: 39.32000000,
+                        status: 'active',
+                        role: 'user'
+                    }
+                ];
+
+                // Insert merchants
+                const { data, error } = await window.supabaseClient
+                    .from('merchant')
+                    .insert(merchants, { returning: 'minimal' });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                // Verify insertion
+                const { data: inserted, error: verifyError } = await window.supabaseClient
+                    .from('merchant')
+                    .select('id, store_name, latitude, longitude', { count: 'exact' })
+                    .not('latitude', 'is', null)
+                    .not('longitude', 'is', null);
+
+                if (verifyError) {
+                    throw verifyError;
+                }
+
+                status.className = 'status success';
+                status.innerHTML = '✅ Successfully inserted 18 merchants with GPS data!';
+
+                // Show stats
+                const statsDiv = document.getElementById('merchantStats');
+                statsDiv.innerHTML = `
+                    <div class="stat-item">
+                        <span class="stat-label">Merchants Created:</span>
+                        <span class="stat-value">${inserted.length}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">With GPS Coordinates:</span>
+                        <span class="stat-value">${inserted.length}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Coverage Area:</span>
+                        <span class="stat-value">Dar es Salaam (5+ districts)</span>
+                    </div>
+                `;
+                statsDiv.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = 'admin-dash.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+                btn.disabled = false;
+            }
+        }
+
+        function goToAdmin() {
+            window.location.href = 'admin-dash.html';
+        }
+    </script>
+</body>
+</html>
