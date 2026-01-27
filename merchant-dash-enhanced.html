@@ -246,24 +246,68 @@
             if (DEVELOPMENT_MODE) {
                 console.log('[DEV] Development mode enabled - skipping auth check');
                 
-                // Set default merchant info for development
-                const merchantInfo = localStorage.getItem('merchantInfo');
-                if (!merchantInfo) {
-                    // Create a default merchant for development
-                    const defaultMerchant = {
-                        id: 'dev-merchant-001',
-                        store_name: 'Development Store',
-                        email: 'dev@simba.local',
-                        partner_type: 'wholesale',
-                        phone: '+255 000 000 000',
-                        location: 'Development Lab'
-                    };
-                    localStorage.setItem('merchantInfo', JSON.stringify(defaultMerchant));
+                // Wait for Supabase to initialize
+                let attempts = 0;
+                while (!window.supabaseClient && attempts < 50) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
                 }
-                
-                const merchant = JSON.parse(localStorage.getItem('merchantInfo'));
-                document.getElementById('merchantName').innerText = merchant.store_name || 'Developer';
-                currentMerchantId = merchant.id;
+
+                if (!window.supabaseClient) {
+                    console.error('[DEV] Supabase not initialized');
+                    return;
+                }
+
+                // Fetch first merchant with GPS data for development
+                try {
+                    const { data: merchants, error } = await window.supabaseClient
+                        .from('merchant')
+                        .select('id, partner_name, email, phone, latitude, longitude')
+                        .not('latitude', 'is', null)
+                        .limit(1)
+                        .single();
+
+                    if (error || !merchants) {
+                        console.error('[DEV] No merchants found with GPS data', error);
+                        // Fallback to any merchant
+                        const { data: fallbackMerchant } = await window.supabaseClient
+                            .from('merchant')
+                            .select('id, partner_name, email, phone')
+                            .limit(1)
+                            .single();
+                        
+                        if (fallbackMerchant) {
+                            const devMerchant = {
+                                id: fallbackMerchant.id,
+                                store_name: fallbackMerchant.partner_name,
+                                email: fallbackMerchant.email,
+                                phone: fallbackMerchant.phone
+                            };
+                            localStorage.setItem('merchantInfo', JSON.stringify(devMerchant));
+                            document.getElementById('merchantName').innerText = devMerchant.store_name;
+                            currentMerchantId = devMerchant.id;
+                            console.log('[DEV] Using fallback merchant:', devMerchant.id);
+                        }
+                        return;
+                    }
+
+                    // Create merchant object from database
+                    const devMerchant = {
+                        id: merchants.id,
+                        store_name: merchants.partner_name,
+                        email: merchants.email,
+                        phone: merchants.phone,
+                        latitude: merchants.latitude,
+                        longitude: merchants.longitude
+                    };
+                    localStorage.setItem('merchantInfo', JSON.stringify(devMerchant));
+                    document.getElementById('merchantName').innerText = devMerchant.store_name;
+                    currentMerchantId = devMerchant.id;
+                    console.log('[DEV] Development mode using real merchant:', devMerchant.id, devMerchant.store_name);
+                } catch (err) {
+                    console.error('[DEV] Error fetching merchant:', err);
+                    return;
+                }
 
                 // Initialize real-time listener
                 setTimeout(() => {
