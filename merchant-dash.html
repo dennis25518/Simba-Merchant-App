@@ -229,16 +229,49 @@
             }
         }
 
+        // DEVELOPMENT MODE: Set to false in production
+        const DEVELOPMENT_MODE = true;
+
         async function handleLogout() {
-            if (window.supabaseClient) {
+            if (window.supabaseClient && !DEVELOPMENT_MODE) {
                 await window.supabaseClient.auth.signOut();
             }
             localStorage.removeItem('merchantInfo');
-            window.location.href = 'index.html';
+            window.location.href = 'merchant-login.html';
         }
 
         // AUTH CHECK
         async function checkAuth() {
+            // DEVELOPMENT MODE: Skip auth check if enabled
+            if (DEVELOPMENT_MODE) {
+                console.log('[DEV] Development mode enabled - skipping auth check');
+                
+                // Set default merchant info for development
+                const merchantInfo = localStorage.getItem('merchantInfo');
+                if (!merchantInfo) {
+                    // Create a default merchant for development
+                    const defaultMerchant = {
+                        id: 'dev-merchant-001',
+                        store_name: 'Development Store',
+                        email: 'dev@simba.local',
+                        partner_type: 'wholesale',
+                        phone: '+255 000 000 000',
+                        location: 'Development Lab'
+                    };
+                    localStorage.setItem('merchantInfo', JSON.stringify(defaultMerchant));
+                }
+                
+                const merchant = JSON.parse(localStorage.getItem('merchantInfo'));
+                document.getElementById('merchantName').innerText = merchant.store_name || 'Developer';
+                currentMerchantId = merchant.id;
+
+                // Initialize real-time listener
+                setTimeout(() => {
+                    initializeOrderListener();
+                }, 1000);
+                return;
+            }
+
             let attempts = 0;
             while (!window.supabaseClient && attempts < 50) {
                 await new Promise(r => setTimeout(r, 100));
