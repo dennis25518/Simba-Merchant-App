@@ -45,8 +45,8 @@
             </button>
             
             <button onclick="switchTab('processing')" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl w-full transition-all">
-                <i data-lucide="package-check" class="shrink-0"></i>
-                <span class="sidebar-text font-bold">Processing</span>
+                <i data-lucide="truck" class="shrink-0"></i>
+                <span class="sidebar-text font-bold">Dispatch</span>
             </button>
 
             <button onclick="switchTab('completed')" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl w-full transition-all">
@@ -113,7 +113,7 @@
 
                 <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
                     <div class="bg-red-600 p-4">
-                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Packing & Dispatch 📦</h2>
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Packing & Ready 📦</h2>
                     </div>
                     <div id="processingList" class="p-4 space-y-4 min-h-[400px] custom-scrollbar overflow-y-auto">
                         <p class="text-center py-20 text-slate-400 text-sm">No orders processing.</p>
@@ -121,13 +121,53 @@
                 </section>
             </div>
 
-            <!-- Processing Tab (Hidden by default) -->
+            <!-- Processing Tab: Ready Orders for Dispatch -->
             <div id="processingTab" class="hidden">
                 <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-                    <div class="bg-red-600 p-4">
-                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Currently Processing Orders</h2>
+                    <div class="bg-green-600 p-4 flex justify-between items-center">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Ready for Dispatch 🚚</h2>
+                        <span class="bg-green-800 text-white text-[10px] px-2 py-1 rounded-full font-bold" id="readyCount">0</span>
                     </div>
-                    <div id="allProcessingList" class="p-6 space-y-4 min-h-[500px]">
+                    <div id="readyOrdersList" class="p-6 space-y-4 min-h-[500px] custom-scrollbar overflow-y-auto">
+                        <p class="text-center py-20 text-slate-400 text-sm">No orders ready for dispatch.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Dispatch Assignment Tab -->
+            <div id="dispatchTab" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                            <div class="bg-blue-600 p-4">
+                                <h2 class="text-white text-xs font-black uppercase tracking-widest">Assign Dispatch Drivers 👨‍💼</h2>
+                            </div>
+                            <div id="dispatchAssignmentList" class="p-6 space-y-4 min-h-[500px] custom-scrollbar overflow-y-auto">
+                                <p class="text-center py-20 text-slate-400 text-sm">No orders awaiting dispatch assignment.</p>
+                            </div>
+                        </section>
+                    </div>
+                    
+                    <div>
+                        <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 h-full">
+                            <div class="bg-purple-600 p-4">
+                                <h2 class="text-white text-xs font-black uppercase tracking-widest">Available Drivers 📋</h2>
+                            </div>
+                            <div id="availableDriversList" class="p-4 space-y-3 min-h-[500px] custom-scrollbar overflow-y-auto">
+                                <p class="text-center py-20 text-slate-400 text-sm">Loading drivers...</p>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Tab (Hidden by default) -->
+            <div id="completedTab" class="hidden">
+                <section class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="bg-green-600 p-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Completed Orders Today</h2>
+                    </div>
+                    <div id="completedList" class="p-6 space-y-4 min-h-[500px]">
                         <p class="text-center py-20 text-slate-400 text-sm">No orders in processing.</p>
                     </div>
                 </section>
@@ -209,6 +249,7 @@
             document.getElementById('processingTab').classList.add('hidden');
             document.getElementById('completedTab').classList.add('hidden');
             document.getElementById('inventoryTab').classList.add('hidden');
+            document.getElementById('dispatchTab').classList.add('hidden');
 
             // Remove active state from all buttons
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -217,7 +258,8 @@
             if (tab === 'orders') {
                 document.getElementById('ordersTab').classList.remove('hidden');
             } else if (tab === 'processing') {
-                document.getElementById('processingTab').classList.remove('hidden');
+                document.getElementById('dispatchTab').classList.remove('hidden');
+                loadDispatchOrders();
             } else if (tab === 'completed') {
                 document.getElementById('completedTab').classList.remove('hidden');
             } else if (tab === 'inventory') {
@@ -419,12 +461,14 @@
                 // Organize orders by status
                 const newOrders = orders.filter(o => o.order_status === 'sent_to_merchant');
                 const processing = orders.filter(o => o.order_status === 'accepted');
+                const readyOrders = orders.filter(o => o.order_status === 'ready_for_dispatch');
                 const completed = orders.filter(o => o.order_status === 'delivered');
 
                 displayNewOrders(newOrders);
                 displayProcessingOrders(processing);
+                displayReadyOrders(readyOrders);
                 displayCompletedOrders(completed);
-                updateOrderCounts(newOrders.length, processing.length, completed.length);
+                updateOrderCounts(newOrders.length, processing.length + readyOrders.length, completed.length);
 
             } catch (error) {
                 console.error('[MERCHANT] Error in loadMerchantOrders:', error);
@@ -536,11 +580,111 @@
                         <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-black">PACKING</span>
                     </div>
                     <p class="text-sm font-bold text-slate-900 mb-2">${order.customer_name}</p>
+                    <p class="text-sm text-slate-600 mb-1">📍 ${order.delivery_address}</p>
                     <p class="text-sm text-slate-600 mb-4">Tsh ${order.total_amount?.toLocaleString() || '0'}</p>
                     
-                    <button onclick="markOrderReady('${order.id}')" class="w-full py-2 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 transition-colors">
-                        📦 Ready for Pickup
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="markOrderReady('${order.id}')" class="w-full py-2 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 transition-colors">
+                            ✓ Ready for Dispatch
+                        </button>
+                        <button onclick="rejectOrder('${order.id}')" class="w-full py-2 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition-colors">
+                            ✗ Reject
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayReadyOrders(orders) {
+            const container = document.getElementById('readyOrdersList');
+            if (!container) return;
+
+            if (orders.length === 0) {
+                container.innerHTML = '<p class="text-center py-20 text-slate-400 text-sm">No orders ready for dispatch.</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="flex justify-between mb-3">
+                        <p class="text-xs font-black text-slate-900 uppercase">Order #${order.id.slice(0, 8)}</p>
+                        <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-black">✓ READY</span>
+                    </div>
+                    <p class="text-sm font-bold text-slate-900 mb-2">${order.customer_name}</p>
+                    <p class="text-sm text-slate-600 mb-1">📍 ${order.delivery_address}</p>
+                    <p class="text-sm text-slate-600 mb-1">GPS: ${order.delivery_latitude?.toFixed(4)}, ${order.delivery_longitude?.toFixed(4)}</p>
+                    <p class="text-sm text-slate-600 mb-4">Tsh ${order.total_amount?.toLocaleString() || '0'}</p>
+                    
+                    <button onclick="openDispatchModal('${order.id}')" class="w-full py-2 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors">
+                        👨‍💼 Assign Driver
                     </button>
+                </div>
+            `).join('');
+
+            document.getElementById('readyCount').textContent = orders.length;
+        }
+
+        function displayDispatchOrders(orders) {
+            const container = document.getElementById('dispatchAssignmentList');
+            if (!container) return;
+
+            if (orders.length === 0) {
+                container.innerHTML = '<p class="text-center py-20 text-slate-400 text-sm">No orders awaiting dispatch assignment.</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 hover:border-blue-400 transition-all">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs font-black text-slate-900 uppercase">Order #${order.id.slice(0, 8)}</p>
+                            <p class="text-sm font-bold text-slate-900 mt-1">${order.customer_name}</p>
+                        </div>
+                        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-black">AWAITING DRIVER</span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded mb-3 text-sm">
+                        <p class="text-slate-600 mb-2">📍 <strong>${order.delivery_address}</strong></p>
+                        <p class="text-slate-500 text-xs">GPS: ${order.delivery_latitude?.toFixed(4)}, ${order.delivery_longitude?.toFixed(4)}</p>
+                        <p class="text-slate-900 font-bold mt-2">Tsh ${order.total_amount?.toLocaleString() || '0'}</p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="openDispatchModal('${order.id}')" class="flex-1 py-2 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 transition-colors">
+                            Assign Driver
+                        </button>
+                        <button onclick="combineWithNearby('${order.id}')" class="flex-1 py-2 bg-purple-600 text-white rounded text-xs font-bold hover:bg-purple-700 transition-colors">
+                            🔗 Combine
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayAvailableDrivers(drivers) {
+            const container = document.getElementById('availableDriversList');
+            if (!container) return;
+
+            if (drivers.length === 0) {
+                container.innerHTML = '<div class="text-center py-20"><p class="text-slate-400 text-sm">No drivers available</p><p class="text-slate-500 text-xs mt-2">Drivers will appear here when they come online</p></div>';
+                return;
+            }
+
+            container.innerHTML = drivers.map(driver => `
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 hover:border-purple-400 transition-all cursor-pointer" onclick="selectDriver('${driver.id}')">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-black">
+                            ${driver.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold text-slate-900">${driver.name}</p>
+                            <p class="text-[10px] text-slate-500">${driver.vehicle_type || 'Vehicle'}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-green-600 font-bold">● Online</span>
+                        <span class="text-slate-500">${driver.distance_km?.toFixed(1) || '?'} km away</span>
+                    </div>
                 </div>
             `).join('');
         }
@@ -627,6 +771,204 @@
                 console.error('[MERCHANT] Error marking order ready:', error);
                 alert('Hitilafu katika kuandika hali');
             }
+        }
+
+        async function rejectOrder(orderId) {
+            if (!confirm('Juu juu kabisa kukataa agizo hili?')) return;
+            
+            try {
+                const { error } = await window.supabaseClient
+                    .from('orders')
+                    .update({
+                        order_status: 'rejected',
+                        rejected_at: new Date().toISOString()
+                    })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+
+                alert('✅ Agizo limekataliwa');
+                loadMerchantOrders();
+
+            } catch (error) {
+                console.error('[MERCHANT] Error rejecting order:', error);
+                alert('❌ Hitilafu katika kukataa agizo');
+            }
+        }
+
+        let selectedOrderForDispatch = null;
+
+        async function openDispatchModal(orderId) {
+            selectedOrderForDispatch = orderId;
+            
+            // Get order details
+            try {
+                const { data: order } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+
+                if (order) {
+                    // Load available drivers
+                    await loadAvailableDrivers(order);
+                }
+            } catch (err) {
+                console.error('Error loading order:', err);
+            }
+        }
+
+        async function loadAvailableDrivers(order) {
+            try {
+                // Simulate loading drivers - in production, this would query a drivers table
+                const mockDrivers = [
+                    { id: 'D1', name: 'Ali Hassan', vehicle_type: 'Boda', distance_km: 2.5, phone: '+255789123456', rating: 4.8 },
+                    { id: 'D2', name: 'John Mtaki', vehicle_type: 'Tuktuk', distance_km: 3.1, phone: '+255787654321', rating: 4.9 },
+                    { id: 'D3', name: 'Fatima Omar', vehicle_type: 'Car', distance_km: 1.8, phone: '+255799999999', rating: 4.7 },
+                    { id: 'D4', name: 'Mohamed Said', vehicle_type: 'Boda', distance_km: 4.2, phone: '+255788888888', rating: 4.6 }
+                ];
+
+                // In real app, filter by distance to delivery location
+                const availableDrivers = mockDrivers.sort((a, b) => a.distance_km - b.distance_km);
+                
+                displayAvailableDrivers(availableDrivers);
+                showNotificationBadge();
+
+            } catch (err) {
+                console.error('Error loading drivers:', err);
+            }
+        }
+
+        async function selectDriver(driverId) {
+            if (!selectedOrderForDispatch) return;
+
+            try {
+                // Get driver details for display
+                const mockDriver = {
+                    'D1': { name: 'Ali Hassan', phone: '+255789123456' },
+                    'D2': { name: 'John Mtaki', phone: '+255787654321' },
+                    'D3': { name: 'Fatima Omar', phone: '+255799999999' },
+                    'D4': { name: 'Mohamed Said', phone: '+255788888888' }
+                };
+
+                const driver = mockDriver[driverId];
+
+                // Update order with assigned driver
+                const { error } = await window.supabaseClient
+                    .from('orders')
+                    .update({
+                        assigned_driver_id: driverId,
+                        assigned_driver_name: driver?.name || 'Driver ' + driverId,
+                        order_status: 'dispatched',
+                        dispatched_at: new Date().toISOString()
+                    })
+                    .eq('id', selectedOrderForDispatch);
+
+                if (error) throw error;
+
+                alert(`✅ Agizo limetengana kwa ${driver?.name || 'Driver'}!`);
+                
+                // Show driver phone for merchant to contact
+                if (driver?.phone) {
+                    alert(`📞 Simu ya dereva: ${driver.phone}`);
+                }
+
+                selectedOrderForDispatch = null;
+                loadMerchantOrders();
+                loadDispatchOrders();
+
+            } catch (error) {
+                console.error('[MERCHANT] Error assigning driver:', error);
+                alert('❌ Hitilafu katika kutengana dereva');
+            }
+        }
+
+        async function loadDispatchOrders() {
+            if (!currentMerchantId || !window.supabaseClient) return;
+
+            try {
+                const { data: orders, error } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('assigned_merchant_id', currentMerchantId)
+                    .in('order_status', ['ready_for_dispatch', 'dispatch_assigned'])
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('[MERCHANT] Error loading dispatch orders:', error);
+                    return;
+                }
+
+                if (!orders || orders.length === 0) {
+                    console.log('[MERCHANT] No orders for dispatch');
+                    return;
+                }
+
+                displayDispatchOrders(orders);
+                loadMerchantOrders(); // Also update main orders count
+
+            } catch (error) {
+                console.error('[MERCHANT] Error in loadDispatchOrders:', error);
+            }
+        }
+
+        async function combineWithNearby(orderId) {
+            try {
+                // Get current order details
+                const { data: currentOrder } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+
+                if (!currentOrder) return;
+
+                // Find nearby orders within 2km
+                const { data: nearbyOrders } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('assigned_merchant_id', currentMerchantId)
+                    .eq('order_status', 'ready_for_dispatch')
+                    .neq('id', orderId);
+
+                if (nearbyOrders && nearbyOrders.length > 0) {
+                    const nearby = nearbyOrders.filter(o => {
+                        const distance = calculateDistance(
+                            currentOrder.delivery_latitude, 
+                            currentOrder.delivery_longitude,
+                            o.delivery_latitude, 
+                            o.delivery_longitude
+                        );
+                        return distance <= 2; // Within 2km
+                    });
+
+                    if (nearby.length > 0) {
+                        const msg = `Kuna ${nearby.length} agizo karibu (ndani ya 2km). Ungependa kuzijenga?`;
+                        if (confirm(msg)) {
+                            // Create combined delivery
+                            alert('✅ Maagizo yameunganisha! Sasa chagua dereva mmoja kwa zote.');
+                            openDispatchModal(orderId);
+                        }
+                    } else {
+                        alert('❌ Hakuna agizo linalyokaribiana');
+                    }
+                } else {
+                    alert('❌ Hakuna agizo jingine linalyokaribiana');
+                }
+            } catch (error) {
+                console.error('[MERCHANT] Error combining orders:', error);
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         function updateOrderCounts(newCount, processingCount, completedCount) {
