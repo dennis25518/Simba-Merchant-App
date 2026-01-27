@@ -207,7 +207,11 @@
             }
 
             try {
-                // Fetch counts directly from database for accuracy
+                // Fetch total count of all orders (regardless of status)
+                const { count: totalOrdersCount, error: totalError } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true });
+
                 const { count: pendingCount, error: pendingError } = await window.supabaseClient
                     .from('orders')
                     .select('*', { count: 'exact', head: true })
@@ -241,7 +245,7 @@
                 }
 
                 // Update dashboard stats from database counts
-                updateOrdersCount(pendingCount || 0);
+                updateOrdersCount(totalOrdersCount || 0);
                 routingStats.autoMatched = autoMatchedCount || 0;
                 routingStats.manualRequired = manualRequiredCount || 0;
                 routingStats.failed = failedCount || 0;
