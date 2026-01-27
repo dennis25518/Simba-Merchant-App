@@ -205,56 +205,69 @@
 
             console.log('Registering merchant:', { email, store_name, partner_type, phone, location });
 
-            // Step 1: Create auth account
-            const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
-                email: email,
-                password: password
-            });
+            try {
+                // Step 1: Create auth account
+                console.log('Creating auth account...');
+                const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
 
-            if (authError) {
-                console.error('Auth error:', authError);
-                showError('Error creating account: ' + authError.message);
+                if (authError) {
+                    console.error('Auth error:', authError);
+                    showError('Error creating account: ' + (authError.message || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                console.log('Auth account created:', authData);
+
+                // Step 2: Insert into merchant table
+                console.log('Inserting merchant profile...');
+                const { data: merchantData, error: merchantError } = await window.supabaseClient
+                    .from('merchants')
+                    .insert([
+                        {
+                            auth_id: authData.user.id,
+                            email: email,
+                            store_name: store_name,
+                            partner_type: partner_type,
+                            phone: phone,
+                            location: location,
+                            status: 'active',
+                            role: 'user'
+                        }
+                    ]);
+
+                if (merchantError) {
+                    console.error('Merchant insert error:', merchantError);
+                    showError('Error creating merchant profile: ' + (merchantError.message || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                console.log('Merchant profile created:', merchantData);
+                showSuccess('Ombi lako limepokelewa! Tafadhali thibitisha barua pepe yako.');
+                
+                setTimeout(() => {
+                    switchTab('login');
+                    document.getElementById('registerForm').reset();
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Registration exception:', error);
+                showError('Registration failed: ' + (error.message || 'Network error. Please try again.'));
                 btn.disabled = false;
                 btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
                 lucide.createIcons();
-                return;
             }
-
-            console.log('Auth account created:', authData);
-
-            // Step 2: Insert into merchant table
-            const { data: merchantData, error: merchantError } = await window.supabaseClient
-                .from('merchant')
-                .insert([
-                    {
-                        email: email,
-                        store_name: store_name,
-                        partner_type: partner_type,
-                        phone: phone,
-                        location: location,
-                        status: 'active',
-                        role: 'user'
-                    }
-                ]);
-
-            if (merchantError) {
-                console.error('Merchant insert error:', merchantError);
-                showError('Error creating merchant profile: ' + merchantError.message);
-                btn.disabled = false;
-                btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
-                lucide.createIcons();
-                return;
-            }
-
-            console.log('Merchant profile created:', merchantData);
-            showSuccess('Ombi lako limepokelewa! Tafadhali thibitisha barua pepe yako.');
-            
-            setTimeout(() => {
-                switchTab('login');
-                btn.disabled = false;
-                btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
-                lucide.createIcons();
-            }, 2000);
         });
 
         // Handle Login
@@ -310,7 +323,7 @@
                     if (user && user.email) {
                         // Query merchant table
                         const { data: merchantRecord, error: merchantError } = await window.supabaseClient
-                            .from('merchant')
+                            .from('merchants')
                             .select('*')
                             .eq('email', user.email)
                             .maybeSingle();
