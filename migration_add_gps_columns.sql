@@ -33,8 +33,17 @@ WHERE table_name = 'merchant'
 AND column_name IN ('latitude', 'longitude')
 ORDER BY ordinal_position;
 
--- View merchant table structure
-\d merchant;
+-- View complete merchant table structure
+SELECT
+  column_name,
+  data_type,
+  is_nullable,
+  ordinal_position,
+  column_default
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'merchant'
+ORDER BY ordinal_position;
 
 -- ============================================
 -- NOTES
@@ -47,3 +56,4 @@ ORDER BY ordinal_position;
 -- 4. The index will improve query performance for location-based searches
 -- 5. These columns are nullable by default - you can update existing merchants
 -- 6. After running this migration, run demo_merchants.sql to populate GPS data
+-- 7. This script is compatible with Supabase SQL Editor (no psql meta-commands)
