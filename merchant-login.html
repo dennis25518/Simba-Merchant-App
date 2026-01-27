@@ -227,7 +227,7 @@
                 // Step 2: Insert into merchant table
                 console.log('Inserting merchant profile...');
                 const { data: merchantData, error: merchantError } = await window.supabaseClient
-                    .from('merchants')
+                    .from('merchant')
                     .insert([
                         {
                             auth_id: authData.user.id,
@@ -323,7 +323,7 @@
                     if (user && user.email) {
                         // Query merchant table
                         const { data: merchantRecord, error: merchantError } = await window.supabaseClient
-                            .from('merchants')
+                            .from('merchant')
                             .select('*')
                             .eq('email', user.email)
                             .maybeSingle();
