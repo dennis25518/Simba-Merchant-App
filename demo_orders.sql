@@ -14,6 +14,7 @@ INSERT INTO orders (
     order_status,
     order_items,
     subtotal,
+    delivery_fee,
     total_amount,
     created_at
 ) VALUES
@@ -28,7 +29,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Rice", "quantity": 50, "unit": "kg"}, {"item": "Beans", "quantity": 25, "unit": "kg"}]',
     45000.00,
-    49500.00,
+    5000.00,
+    50000.00,
     NOW()
 ),
 
@@ -43,7 +45,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Cooking Oil", "quantity": 20, "unit": "liters"}, {"item": "Sugar", "quantity": 30, "unit": "kg"}]',
     38000.00,
-    41800.00,
+    4500.00,
+    42500.00,
     NOW()
 ),
 
@@ -58,7 +61,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Flour", "quantity": 100, "unit": "kg"}, {"item": "Salt", "quantity": 10, "unit": "kg"}]',
     52000.00,
-    57200.00,
+    6000.00,
+    58000.00,
     NOW()
 ),
 
@@ -73,7 +77,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Maize Meal", "quantity": 75, "unit": "kg"}, {"item": "Pasta", "quantity": 40, "unit": "kg"}]',
     55000.00,
-    60500.00,
+    6500.00,
+    61500.00,
     NOW()
 ),
 
@@ -88,7 +93,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Tea", "quantity": 15, "unit": "kg"}, {"item": "Coffee", "quantity": 10, "unit": "kg"}]',
     35000.00,
-    38500.00,
+    5500.00,
+    40500.00,
     NOW()
 ),
 
@@ -103,7 +109,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Honey", "quantity": 5, "unit": "liters"}, {"item": "Spices", "quantity": 3, "unit": "kg"}]',
     28000.00,
-    30800.00,
+    4000.00,
+    32000.00,
     NOW()
 ),
 
@@ -118,7 +125,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Eggs", "quantity": 500, "unit": "pieces"}, {"item": "Butter", "quantity": 20, "unit": "kg"}]',
     62000.00,
-    68200.00,
+    7000.00,
+    69000.00,
     NOW()
 ),
 
@@ -133,7 +141,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Fish Powder", "quantity": 12, "unit": "kg"}, {"item": "Dried Fish", "quantity": 25, "unit": "kg"}]',
     48000.00,
-    52800.00,
+    6000.00,
+    54000.00,
     NOW()
 ),
 
@@ -148,7 +157,8 @@ INSERT INTO orders (
     'pending',
     '[{"item": "Tomatoes", "quantity": 80, "unit": "kg"}, {"item": "Onions", "quantity": 50, "unit": "kg"}]',
     32000.00,
-    35200.00,
+    5000.00,
+    37000.00,
     NOW()
 );
 
