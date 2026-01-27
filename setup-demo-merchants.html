@@ -164,8 +164,36 @@
         <div id="merchantStats" class="merchant-stats"></div>
     </div>
 
-    <script src="supabase-config.js"></script>
+    <script async defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://cmsqvcqddnefquxzchxy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3F2Y3FkZG5lZnF1eHpjaHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI1NzMxMTgsImV4cCI6MjA0ODE0OTExOH0.4sVjsQM8sQ9E4fNf_1IqlDBELHvvyOYEtDXF7BpCJvY';
+
+        let supabaseClient = null;
+
+        // Wait for Supabase to load
+        async function initSupabase() {
+            if (!window.supabase) {
+                console.log('Waiting for Supabase to load...');
+                return new Promise((resolve) => {
+                    const check = setInterval(() => {
+                        if (window.supabase) {
+                            clearInterval(check);
+                            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                            window.supabaseClient = supabaseClient;
+                            console.log('Supabase initialized');
+                            resolve();
+                        }
+                    }, 100);
+                });
+            } else {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                window.supabaseClient = supabaseClient;
+                console.log('Supabase initialized');
+            }
+        }
+
         async function setupMerchants() {
             const btn = document.querySelector('.btn-setup');
             const status = document.getElementById('status');
@@ -173,10 +201,18 @@
 
             btn.disabled = true;
             status.className = 'status loading';
-            status.innerHTML = '<span class="spinner"></span>Inserting merchants...';
+            status.innerHTML = '<span class="spinner"></span>Initializing Supabase...';
             statsDiv.style.display = 'none';
 
             try {
+                // Ensure Supabase is initialized
+                await initSupabase();
+                
+                status.innerHTML = '<span class="spinner"></span>Inserting merchants...';
+                
+                if (!window.supabaseClient) {
+                    throw new Error('Failed to initialize Supabase client');
+                }
                 // Array of 18 demo merchants with GPS coordinates in Dar es Salaam
                 const merchants = [
                     // Ilala District
