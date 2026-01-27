@@ -32,8 +32,7 @@ const MatchmakerEngine = {
                     .from('orders')
                     .update({
                         order_status: 'manual_required',
-                        routing_error: 'MERCHANT_DASHBOARD_INACTIVE',
-                        routing_failed_at: new Date().toISOString()
+                        routing_error: 'MERCHANT_DASHBOARD_INACTIVE'
                     })
                     .eq('id', order.id);
 
@@ -79,7 +78,6 @@ const MatchmakerEngine = {
                 .update({
                     order_status: 'sent_to_merchant',
                     assigned_merchant_id: matchedMerchant.id,
-                    assigned_at: new Date().toISOString(),
                     distance_km: this.calculateDistance(
                         order.delivery_latitude,
                         order.delivery_longitude,
@@ -103,8 +101,7 @@ const MatchmakerEngine = {
                     .from('orders')
                     .update({
                         order_status: 'manual_required',
-                        routing_error: error.message,
-                        routing_failed_at: new Date().toISOString()
+                        routing_error: error.message
                     })
                     .eq('id', order.id);
             } catch (e) {
