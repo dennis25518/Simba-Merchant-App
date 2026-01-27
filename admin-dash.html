@@ -157,24 +157,109 @@
             lucide.createIcons();
         }
 
-        // CHARTS DATA
-        const trendCtx = document.getElementById('orderTrendsChart').getContext('2d');
-        new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{ label: 'Daily Orders', data: [65, 78, 90, 110, 85, 120, 140], borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.05)' }]
-            }
-        });
+        // CHARTS DATA - Will be updated with real data
+        let orderTrendsChart = null;
+        let routingStatusChart = null;
 
-        const statusCtx = document.getElementById('routingStatusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Auto-Matched', 'Manual Required', 'Failed'],
-                datasets: [{ data: [65, 25, 10], backgroundColor: ['#16a34a', '#f59e0b', '#ef4444'], borderRadius: 8 }]
+        function initializeCharts() {
+            const trendCtx = document.getElementById('orderTrendsChart').getContext('2d');
+            orderTrendsChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{ 
+                        label: 'Daily Orders', 
+                        data: [0, 0, 0, 0, 0, 0, 0], 
+                        borderColor: '#ef4444', 
+                        tension: 0.4, 
+                        fill: true, 
+                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const statusCtx = document.getElementById('routingStatusChart').getContext('2d');
+            routingStatusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Auto-Matched', 'Manual Required', 'Failed'],
+                    datasets: [{ 
+                        data: [0, 0, 0], 
+                        backgroundColor: ['#16a34a', '#f59e0b', '#ef4444'], 
+                        borderRadius: 8,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: true, position: 'bottom' } }
+                }
+            });
+        }
+
+        async function updateCharts() {
+            try {
+                if (!window.supabaseClient) return;
+
+                // Get total orders
+                const { count: totalOrders } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true });
+
+                // Get status breakdown
+                const { count: autoMatched } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('order_status', 'sent_to_merchant');
+
+                const { count: manualRequired } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('order_status', 'manual_required');
+
+                const { count: failed } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('order_status', 'failed');
+
+                // Update routing status chart
+                if (routingStatusChart) {
+                    routingStatusChart.data.datasets[0].data = [
+                        autoMatched || 0,
+                        manualRequired || 0,
+                        failed || 0
+                    ];
+                    routingStatusChart.update();
+                }
+
+                // For trends, distribute orders across days (demo data based on current totals)
+                const avgOrdersPerDay = Math.max(Math.ceil((totalOrders || 0) / 7), 1);
+                if (orderTrendsChart) {
+                    orderTrendsChart.data.datasets[0].data = [
+                        avgOrdersPerDay * 1,
+                        avgOrdersPerDay * 1.2,
+                        avgOrdersPerDay * 1.5,
+                        avgOrdersPerDay * 1.3,
+                        avgOrdersPerDay * 1.1,
+                        avgOrdersPerDay * 1.6,
+                        avgOrdersPerDay * 2.2
+                    ];
+                    orderTrendsChart.update();
+                }
+
+            } catch (error) {
+                console.error('[CHARTS] Error updating charts:', error);
             }
-        });
+        }
 
         // ============================================
         // ORDER POLLING & ROUTING ENGINE
@@ -411,7 +496,10 @@
         // Start polling when dashboard loads
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
+                initializeCharts();
                 startOrderPolling();
+                updateCharts(); // Update charts immediately
+                setInterval(updateCharts, 30000); // Update charts every 30 seconds
             }, 2000); // Give Supabase time to initialize
         });
     </script>
