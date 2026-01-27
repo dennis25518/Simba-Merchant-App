@@ -7,7 +7,6 @@
 INSERT INTO merchant (
     email,
     store_name,
-    owner_name,
     partner_type,
     phone,
     location,
@@ -15,14 +14,12 @@ INSERT INTO merchant (
     longitude,
     status,
     role,
-    created_at,
-    auth_id
+    created_at
 ) VALUES
 -- 1. Ilala District - City Center
 (
     'tabata.wholesale@simba.local',
     'Tabata Wholesale Hub',
-    'Ahmed Hassan',
     'wholesale',
     '+255 789 123 001',
     'Tabata, Ilala - City Center',
@@ -30,15 +27,13 @@ INSERT INTO merchant (
     39.2304,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 2. Ilala District - Kariakoo Market
 (
     'kariakoo.supplies@simba.local',
     'Kariakoo Premium Supplies',
-    'Fatima Mohamed',
     'wholesale',
     '+255 789 123 002',
     'Kariakoo Market, Ilala',
@@ -46,15 +41,13 @@ INSERT INTO merchant (
     39.2220,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 3. Kinondoni District - Msasani
 (
     'msasani.traders@simba.local',
     'Msasani Quality Traders',
-    'John Mwase',
     'wholesale',
     '+255 789 123 003',
     'Msasani Peninsula, Kinondoni',
@@ -62,15 +55,13 @@ INSERT INTO merchant (
     39.2850,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 4. Kinondoni District - Oysterbay
 (
     'oysterbay.merchant@simba.local',
     'Oysterbay Express Merchant',
-    'Zainab Ibrahim',
     'wholesale',
     '+255 789 123 004',
     'Oysterbay, Kinondoni',
@@ -78,15 +69,13 @@ INSERT INTO merchant (
     39.2950,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 5. Kinondoni District - Sinza
 (
     'sinza.distribution@simba.local',
     'Sinza Distribution Center',
-    'Peter Mugyenyi',
     'manufacturer',
     '+255 789 123 005',
     'Sinza, Kinondoni',
@@ -94,15 +83,13 @@ INSERT INTO merchant (
     39.2650,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 6. Ubungo District - Makumbusho
 (
     'makumbusho.supplies@simba.local',
     'Makumbusho Supplies Ltd',
-    'Rachel Kipchoge',
     'wholesale',
     '+255 789 123 006',
     'Makumbusho, Ubungo',
@@ -110,15 +97,13 @@ INSERT INTO merchant (
     39.1920,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 7. Temeke District - Chalinze
 (
     'chalinze.merchants@simba.local',
     'Chalinze Trading Post',
-    'Samuel Kwame',
     'wholesale',
     '+255 789 123 007',
     'Chalinze, Temeke',
@@ -126,15 +111,13 @@ INSERT INTO merchant (
     39.2130,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 8. Ubungo District - Kigamboni
 (
     'kigamboni.wholesale@simba.local',
     'Kigamboni Wholesale Center',
-    'Amara Okonkwo',
     'manufacturer',
     '+255 789 123 008',
     'Kigamboni, Ubungo',
@@ -142,15 +125,13 @@ INSERT INTO merchant (
     39.1650,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 ),
 
 -- 9. Ilala District - Kivukoni
 (
     'kivukoni.express@simba.local',
     'Kivukoni Express Depot',
-    'Mustafa Hassan',
     'wholesale',
     '+255 789 123 009',
     'Kivukoni Front, Ilala',
@@ -158,8 +139,7 @@ INSERT INTO merchant (
     39.2150,
     'active',
     'user',
-    NOW(),
-    NULL
+    NOW()
 );
 
 -- ============================================
@@ -198,5 +178,4 @@ ORDER BY location;
 -- 4. Email format: {area}.{type}@simba.local for easy identification
 -- 5. All merchants have unique phone numbers for SMS verification later
 -- 6. Partner types mix between 'wholesale' and 'manufacturer'
--- 7. auth_id is NULL - these are demo accounts without Supabase Auth users
--- 8. When ready to connect with Supabase Auth, update auth_id with real user IDs
+-- 7. Created with current timestamp for tracking
