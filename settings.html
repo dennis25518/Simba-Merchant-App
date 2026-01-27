@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings | Simba Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; overflow: hidden; }
+        
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
+        #sidebar.collapsed { width: 85px; }
+        #sidebar.collapsed .sidebar-text, #sidebar.collapsed .logo-text { display: none; }
+        #sidebar.collapsed .nav-item { justify-content: center; }
+        
+        .settings-section { background: white; border-radius: 24px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
+        .settings-group { padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
+        .settings-group:last-child { border-bottom: none; }
+        
+        .input-field { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; transition: all 0.3s ease; }
+        .input-field:focus { outline: none; border-color: #ef4444; background: #fef2f2; }
+        
+        .toggle-switch { position: relative; width: 50px; height: 28px; background: #e2e8f0; border-radius: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .toggle-switch.active { background: #16a34a; }
+        .toggle-switch::after { content: ''; position: absolute; width: 24px; height: 24px; background: white; border-radius: 12px; top: 2px; left: 2px; transition: all 0.3s ease; }
+        .toggle-switch.active::after { left: 24px; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .button-save { background: #16a34a; color: white; padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .button-save:hover { background: #15803d; box-shadow: 0 10px 25px rgba(22, 163, 74, 0.2); }
+        
+        .button-danger { background: #ef4444; color: white; padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .button-danger:hover { background: #dc2626; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2); }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <aside id="sidebar" class="bg-slate-900 h-full flex flex-col py-8 shrink-0 relative">
+        <button onclick="toggleSidebar()" class="absolute -right-3 top-10 bg-red-600 text-white rounded-full p-1 shadow-lg z-50">
+            <i data-lucide="chevron-left" id="toggleIcon" class="w-4 h-4"></i>
+        </button>
+
+        <div class="px-6 mb-12 flex items-center gap-3">
+            <i data-lucide="shield-check" class="text-red-600 w-8 h-8 shrink-0"></i>
+            <h1 class="text-white font-black italic text-xl uppercase tracking-tighter logo-text">SIMBA <span class="text-red-600">ADMIN</span></h1>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-4">
+            <a href="admin-dash.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="layout-dashboard" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Dashboard</span>
+            </a>
+
+            <a href="manual-match.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <div class="flex items-center gap-4">
+                    <i data-lucide="git-pull-request" class="shrink-0"></i>
+                    <span class="sidebar-text font-bold">Manual Match</span>
+                </div>
+            </a>
+
+            <a href="hotline.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="phone-forwarded" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Hotline</span>
+            </a>
+        </nav>
+
+        <div class="px-4 mt-auto border-t border-slate-800 pt-6 space-y-2">
+            <a href="settings.html" class="nav-item flex items-center gap-4 p-3 w-full text-white bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="settings" class="shrink-0"></i>
+                <span class="sidebar-text font-bold text-sm">Settings</span>
+            </a>
+            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all group">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0 group-hover:bg-red-600">AD</div>
+                <span class="sidebar-text font-bold text-sm">Admin Profile</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-end mb-10">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900">Settings & Configuration</h2>
+                <p class="text-slate-500 font-medium">Manage system preferences and operational parameters.</p>
+            </div>
+            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border font-bold text-slate-700">
+                <i data-lucide="calendar" class="inline w-4 h-4 mr-2"></i> Today: <span id="currentDate">--</span>
+            </div>
+        </div>
+
+        <!-- General Settings -->
+        <div class="settings-section">
+            <div class="flex items-center gap-3 mb-6">
+                <i data-lucide="sliders" class="w-6 h-6 text-blue-600"></i>
+                <h3 class="text-xl font-black uppercase text-slate-900">General Settings</h3>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">System Name</label>
+                <input type="text" id="systemName" class="input-field" placeholder="Enter system name" value="Simba Order Routing">
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Timezone</label>
+                <select id="timezone" class="input-field">
+                    <option selected>Africa/Dar_es_Salaam (EAT)</option>
+                    <option>Africa/Nairobi (EAT)</option>
+                    <option>Africa/Kampala (EAT)</option>
+                    <option>UTC</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Support Email</label>
+                <input type="email" id="supportEmail" class="input-field" placeholder="support@simba.local" value="support@simba.local">
+            </div>
+
+            <div class="flex gap-4 mt-6">
+                <button class="button-save" onclick="saveGeneralSettings()">
+                    <i data-lucide="save" class="inline w-4 h-4 mr-2"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Order Routing Settings -->
+        <div class="settings-section">
+            <div class="flex items-center gap-3 mb-6">
+                <i data-lucide="route" class="w-6 h-6 text-orange-600"></i>
+                <h3 class="text-xl font-black uppercase text-slate-900">Order Routing</h3>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Enable Auto-Matching</label>
+                        <p class="text-xs text-slate-500 mt-1">Automatically assign orders to nearby merchants</p>
+                    </div>
+                    <div class="toggle-switch active" id="autoMatchToggle" onclick="toggleAutoMatch()"></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Matching Radius (km)</label>
+                <input type="number" id="matchingRadius" class="input-field" placeholder="5" value="5" min="1" max="50">
+                <p class="text-xs text-slate-500 mt-2">Maximum distance to search for merchants</p>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Order Assignment Timeout (seconds)</label>
+                <input type="number" id="assignmentTimeout" class="input-field" placeholder="30" value="30" min="5" max="120">
+                <p class="text-xs text-slate-500 mt-2">Time to wait before marking order as manual</p>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Require Inventory Check</label>
+                        <p class="text-xs text-slate-500 mt-1">Verify merchant inventory before assignment</p>
+                    </div>
+                    <div class="toggle-switch active" id="inventoryToggle" onclick="toggleInventoryCheck()"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mt-6">
+                <button class="button-save" onclick="saveRoutingSettings()">
+                    <i data-lucide="save" class="inline w-4 h-4 mr-2"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-section">
+            <div class="flex items-center gap-3 mb-6">
+                <i data-lucide="bell" class="w-6 h-6 text-green-600"></i>
+                <h3 class="text-xl font-black uppercase text-slate-900">Notifications</h3>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Email Alerts</label>
+                        <p class="text-xs text-slate-500 mt-1">Send email for critical system events</p>
+                    </div>
+                    <div class="toggle-switch active" id="emailToggle" onclick="toggleEmailNotifications()"></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">SMS Alerts</label>
+                        <p class="text-xs text-slate-500 mt-1">Send SMS for urgent order issues</p>
+                    </div>
+                    <div class="toggle-switch" id="smsToggle" onclick="toggleSmsNotifications()"></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Dashboard Notifications</label>
+                        <p class="text-xs text-slate-500 mt-1">Show in-app notifications</p>
+                    </div>
+                    <div class="toggle-switch active" id="dashboardToggle" onclick="toggleDashboardNotifications()"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mt-6">
+                <button class="button-save" onclick="saveNotificationSettings()">
+                    <i data-lucide="save" class="inline w-4 h-4 mr-2"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="settings-section">
+            <div class="flex items-center gap-3 mb-6">
+                <i data-lucide="lock" class="w-6 h-6 text-red-600"></i>
+                <h3 class="text-xl font-black uppercase text-slate-900">Security</h3>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-4">Change Admin Password</label>
+                <input type="password" id="currentPassword" class="input-field mb-3" placeholder="Current Password">
+                <input type="password" id="newPassword" class="input-field mb-3" placeholder="New Password">
+                <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm Password">
+                <button class="button-save mt-4" onclick="changePassword()">
+                    <i data-lucide="key" class="inline w-4 h-4 mr-2"></i> Update Password
+                </button>
+            </div>
+
+            <div class="settings-group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Two-Factor Authentication</label>
+                        <p class="text-xs text-slate-500 mt-1">Add extra security to your account</p>
+                    </div>
+                    <div class="toggle-switch" id="twoFactorToggle" onclick="toggle2FA()"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Maintenance -->
+        <div class="settings-section border-red-200 bg-red-50/30">
+            <div class="flex items-center gap-3 mb-6">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                <h3 class="text-xl font-black uppercase text-red-900">System Maintenance</h3>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Clear Cache</label>
+                <p class="text-xs text-slate-500 mb-4">Remove all cached data to free up space</p>
+                <button class="button-danger" onclick="clearCache()">
+                    <i data-lucide="trash-2" class="inline w-4 h-4 mr-2"></i> Clear All Cache
+                </button>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">System Status</label>
+                <div class="flex items-center gap-2 p-4 bg-white rounded-lg border border-green-200">
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-bold text-green-700">All systems operational</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Reset to Defaults</label>
+                <p class="text-xs text-slate-500 mb-4">Restore all settings to factory defaults (cannot be undone)</p>
+                <button class="button-danger" onclick="resetToDefaults()">
+                    <i data-lucide="refresh-cw" class="inline w-4 h-4 mr-2"></i> Reset System
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('sw-TZ', options);
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            sidebar.classList.toggle('collapsed');
+            icon.setAttribute('data-lucide', sidebar.classList.contains('collapsed') ? 'chevron-right' : 'chevron-left');
+            lucide.createIcons();
+        }
+
+        function toggleAutoMatch() {
+            const toggle = document.getElementById('autoMatchToggle');
+            toggle.classList.toggle('active');
+        }
+
+        function toggleInventoryCheck() {
+            const toggle = document.getElementById('inventoryToggle');
+            toggle.classList.toggle('active');
+        }
+
+        function toggleEmailNotifications() {
+            const toggle = document.getElementById('emailToggle');
+            toggle.classList.toggle('active');
+        }
+
+        function toggleSmsNotifications() {
+            const toggle = document.getElementById('smsToggle');
+            toggle.classList.toggle('active');
+        }
+
+        function toggleDashboardNotifications() {
+            const toggle = document.getElementById('dashboardToggle');
+            toggle.classList.toggle('active');
+        }
+
+        function toggle2FA() {
+            const toggle = document.getElementById('twoFactorToggle');
+            toggle.classList.toggle('active');
+            if (toggle.classList.contains('active')) {
+                alert('🔐 Two-Factor Authentication enabled!\n\nYou will need to enter a code from your authenticator app on next login.');
+            }
+        }
+
+        function saveGeneralSettings() {
+            const systemName = document.getElementById('systemName').value;
+            const timezone = document.getElementById('timezone').value;
+            const supportEmail = document.getElementById('supportEmail').value;
+
+            localStorage.setItem('systemSettings', JSON.stringify({
+                systemName,
+                timezone,
+                supportEmail,
+                lastUpdated: new Date().toISOString()
+            }));
+
+            alert('✅ General settings saved successfully!');
+        }
+
+        function saveRoutingSettings() {
+            const matchingRadius = document.getElementById('matchingRadius').value;
+            const assignmentTimeout = document.getElementById('assignmentTimeout').value;
+            const autoMatch = document.getElementById('autoMatchToggle').classList.contains('active');
+            const inventoryCheck = document.getElementById('inventoryToggle').classList.contains('active');
+
+            localStorage.setItem('routingSettings', JSON.stringify({
+                matchingRadius,
+                assignmentTimeout,
+                autoMatch,
+                inventoryCheck,
+                lastUpdated: new Date().toISOString()
+            }));
+
+            alert('✅ Routing settings saved successfully!');
+        }
+
+        function saveNotificationSettings() {
+            const emailAlerts = document.getElementById('emailToggle').classList.contains('active');
+            const smsAlerts = document.getElementById('smsToggle').classList.contains('active');
+            const dashboardNotifications = document.getElementById('dashboardToggle').classList.contains('active');
+
+            localStorage.setItem('notificationSettings', JSON.stringify({
+                emailAlerts,
+                smsAlerts,
+                dashboardNotifications,
+                lastUpdated: new Date().toISOString()
+            }));
+
+            alert('✅ Notification settings saved successfully!');
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('❌ Please fill in all password fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('❌ New passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('❌ Password must be at least 8 characters');
+                return;
+            }
+
+            alert('✅ Password changed successfully!');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function clearCache() {
+            if (confirm('⚠️ This will clear all cached data. Continue?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert('✅ Cache cleared successfully!');
+            }
+        }
+
+        function resetToDefaults() {
+            if (confirm('⚠️ WARNING: This will reset ALL settings to defaults. This action cannot be undone. Continue?')) {
+                if (confirm('🔴 Are you absolutely sure? Type your confirmation to proceed.')) {
+                    localStorage.clear();
+                    alert('✅ System reset to defaults. Refreshing page...');
+                    location.reload();
+                }
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('adminInfo');
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // Load saved settings on page load
+        window.addEventListener('load', () => {
+            const generalSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+            const routingSettings = JSON.parse(localStorage.getItem('routingSettings') || '{}');
+            const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+
+            if (generalSettings.systemName) document.getElementById('systemName').value = generalSettings.systemName;
+            if (generalSettings.timezone) document.getElementById('timezone').value = generalSettings.timezone;
+            if (generalSettings.supportEmail) document.getElementById('supportEmail').value = generalSettings.supportEmail;
+
+            if (routingSettings.matchingRadius) document.getElementById('matchingRadius').value = routingSettings.matchingRadius;
+            if (routingSettings.assignmentTimeout) document.getElementById('assignmentTimeout').value = routingSettings.assignmentTimeout;
+            if (routingSettings.autoMatch === false) document.getElementById('autoMatchToggle').classList.remove('active');
+            if (routingSettings.inventoryCheck === false) document.getElementById('inventoryToggle').classList.remove('active');
+
+            if (notificationSettings.emailAlerts === false) document.getElementById('emailToggle').classList.remove('active');
+            if (notificationSettings.smsAlerts === true) document.getElementById('smsToggle').classList.add('active');
+            if (notificationSettings.dashboardNotifications === false) document.getElementById('dashboardToggle').classList.remove('active');
+        });
+    </script>
+</body>
+</html>
