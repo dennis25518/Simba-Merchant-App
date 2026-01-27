@@ -176,7 +176,7 @@
             }
         });
 
-        // Handle Registration - with Supabase check
+        // Handle Registration - with retry logic
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -206,16 +206,54 @@
             console.log('Registering merchant:', { email, store_name, partner_type, phone, location });
 
             try {
-                // Step 1: Create auth account
-                console.log('Creating auth account...');
-                const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
-                    email: email,
-                    password: password
-                });
+                // Step 1: Create auth account with retry logic
+                console.log('Creating auth account (with retry)...');
+                let authData = null;
+                let authError = null;
+                let retries = 0;
+                const maxRetries = 3;
+
+                while (retries < maxRetries && !authData) {
+                    try {
+                        const result = await Promise.race([
+                            window.supabaseClient.auth.signUp({
+                                email: email,
+                                password: password
+                            }),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Request timeout - taking too long')), 15000)
+                            )
+                        ]);
+                        authData = result.data;
+                        authError = result.error;
+                        break;
+                    } catch (err) {
+                        console.warn(`Sign up attempt ${retries + 1} failed:`, err.message);
+                        authError = err;
+                        retries++;
+                        if (retries < maxRetries) {
+                            console.log(`Retrying in 2 seconds...`);
+                            await new Promise(r => setTimeout(r, 2000));
+                        }
+                    }
+                }
 
                 if (authError) {
-                    console.error('Auth error:', authError);
-                    showError('Error creating account: ' + (authError.message || 'Unknown error'));
+                    console.error('Auth error after retries:', authError);
+                    const errorMsg = authError.message || 'Unknown error';
+                    if (errorMsg.includes('timeout') || errorMsg.includes('Failed to fetch')) {
+                        showError('Connection timeout. Supabase might be under maintenance. Please try again in a few moments.');
+                    } else {
+                        showError('Error creating account: ' + errorMsg);
+                    }
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                if (!authData || !authData.user) {
+                    showError('Unexpected response from server. Please try again.');
                     btn.disabled = false;
                     btn.innerHTML = `<span>Omba Ubia Sasa</span> <i data-lucide="send" class="w-4 h-4"></i>`;
                     lucide.createIcons();
