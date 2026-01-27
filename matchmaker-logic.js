@@ -5,7 +5,7 @@
 // Place this in your Simba-Merchant-App repository
 
 // FEATURE FLAG: Set to true when merchant dashboard is active
-const MERCHANT_DASHBOARD_ACTIVE = false;
+const MERCHANT_DASHBOARD_ACTIVE = true;
 
 const MatchmakerEngine = {
     
