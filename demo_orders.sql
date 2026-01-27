@@ -5,6 +5,7 @@
 -- These orders will be auto-matched to the demo merchants
 
 INSERT INTO orders (
+    user_email,
     customer_name,
     customer_phone,
     delivery_latitude,
@@ -15,6 +16,7 @@ INSERT INTO orders (
 ) VALUES
 -- Order 1: City Center (Ilala) - Near Tabata
 (
+    'hassan.juma@simba.local',
     'Hassan Juma',
     '+255 700 111 001',
     -6.8055,
@@ -26,6 +28,7 @@ INSERT INTO orders (
 
 -- Order 2: Kariakoo Market area
 (
+    'amina.khalil@simba.local',
     'Amina Khalil',
     '+255 700 111 002',
     -6.8130,
@@ -37,6 +40,7 @@ INSERT INTO orders (
 
 -- Order 3: Msasani Peninsula - Kinondoni
 (
+    'john.mwangi@simba.local',
     'John Mwangi',
     '+255 700 111 003',
     -6.7660,
@@ -48,6 +52,7 @@ INSERT INTO orders (
 
 -- Order 4: Oysterbay Area
 (
+    'zainab.rashid@simba.local',
     'Zainab Rashid',
     '+255 700 111 004',
     -6.7475,
@@ -59,6 +64,7 @@ INSERT INTO orders (
 
 -- Order 5: Sinza Residential Area
 (
+    'peter.kimani@simba.local',
     'Peter Kimani',
     '+255 700 111 005',
     -6.7860,
@@ -70,6 +76,7 @@ INSERT INTO orders (
 
 -- Order 6: Makumbusho - Ubungo
 (
+    'rachel.kipchoge@simba.local',
     'Rachel Kipchoge',
     '+255 700 111 006',
     -6.8460,
@@ -81,6 +88,7 @@ INSERT INTO orders (
 
 -- Order 7: Chalinze - Temeke
 (
+    'samuel.kamau@simba.local',
     'Samuel Kamau',
     '+255 700 111 007',
     -6.9015,
@@ -92,6 +100,7 @@ INSERT INTO orders (
 
 -- Order 8: Kigamboni - Ubungo
 (
+    'amara.okafor@simba.local',
     'Amara Okafor',
     '+255 700 111 008',
     -6.8675,
@@ -103,6 +112,7 @@ INSERT INTO orders (
 
 -- Order 9: Kivukoni Front - Ilala
 (
+    'mustafa.hassan@simba.local',
     'Mustafa Hassan',
     '+255 700 111 009',
     -6.8210,
