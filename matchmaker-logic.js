@@ -31,8 +31,7 @@ const MatchmakerEngine = {
                 const { error } = await supabase
                     .from('orders')
                     .update({
-                        order_status: 'manual_required',
-                        routing_error: 'MERCHANT_DASHBOARD_INACTIVE'
+                        order_status: 'manual_required'
                     })
                     .eq('id', order.id);
 
@@ -100,8 +99,7 @@ const MatchmakerEngine = {
                 await supabase
                     .from('orders')
                     .update({
-                        order_status: 'manual_required',
-                        routing_error: error.message
+                        order_status: 'manual_required'
                     })
                     .eq('id', order.id);
             } catch (e) {
