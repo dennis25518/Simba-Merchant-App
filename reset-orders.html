@@ -163,12 +163,11 @@
                 
                 status.innerHTML = '<span class="spinner"></span>Resetting orders...';
 
-                // Reset all orders to pending and clear routing_error
+                // Reset all orders to pending only
                 const { data, error } = await window.supabaseClient
                     .from('orders')
                     .update({
-                        order_status: 'pending',
-                        routing_error: null
+                        order_status: 'pending'
                     })
                     .neq('id', 'invalid'); // Update all rows
 
