@@ -12,6 +12,7 @@ INSERT INTO orders (
     delivery_longitude,
     delivery_address,
     order_status,
+    order_items,
     created_at
 ) VALUES
 -- Order 1: City Center (Ilala) - Near Tabata
@@ -23,6 +24,7 @@ INSERT INTO orders (
     39.2310,
     'Tabata Main Street, Ilala',
     'pending',
+    '[{"item": "Rice", "quantity": 50, "unit": "kg"}, {"item": "Beans", "quantity": 25, "unit": "kg"}]',
     NOW()
 ),
 
@@ -35,6 +37,7 @@ INSERT INTO orders (
     39.2215,
     'Kariakoo Market, Ilala',
     'pending',
+    '[{"item": "Cooking Oil", "quantity": 20, "unit": "liters"}, {"item": "Sugar", "quantity": 30, "unit": "kg"}]',
     NOW()
 ),
 
@@ -47,6 +50,7 @@ INSERT INTO orders (
     39.2845,
     'Msasani Business Plaza, Kinondoni',
     'pending',
+    '[{"item": "Flour", "quantity": 100, "unit": "kg"}, {"item": "Salt", "quantity": 10, "unit": "kg"}]',
     NOW()
 ),
 
@@ -59,6 +63,7 @@ INSERT INTO orders (
     39.2955,
     'Oysterbay Commercial Area, Kinondoni',
     'pending',
+    '[{"item": "Maize Meal", "quantity": 75, "unit": "kg"}, {"item": "Pasta", "quantity": 40, "unit": "kg"}]',
     NOW()
 ),
 
@@ -71,6 +76,7 @@ INSERT INTO orders (
     39.2655,
     'Sinza Housing Estate, Kinondoni',
     'pending',
+    '[{"item": "Tea", "quantity": 15, "unit": "kg"}, {"item": "Coffee", "quantity": 10, "unit": "kg"}]',
     NOW()
 ),
 
@@ -83,6 +89,7 @@ INSERT INTO orders (
     39.1915,
     'Makumbusho Market Area, Ubungo',
     'pending',
+    '[{"item": "Honey", "quantity": 5, "unit": "liters"}, {"item": "Spices", "quantity": 3, "unit": "kg"}]',
     NOW()
 ),
 
@@ -95,6 +102,7 @@ INSERT INTO orders (
     39.2135,
     'Chalinze Trading Zone, Temeke',
     'pending',
+    '[{"item": "Eggs", "quantity": 500, "unit": "pieces"}, {"item": "Butter", "quantity": 20, "unit": "kg"}]',
     NOW()
 ),
 
@@ -107,6 +115,7 @@ INSERT INTO orders (
     39.1655,
     'Kigamboni Port Area, Ubungo',
     'pending',
+    '[{"item": "Fish Powder", "quantity": 12, "unit": "kg"}, {"item": "Dried Fish", "quantity": 25, "unit": "kg"}]',
     NOW()
 ),
 
@@ -119,6 +128,7 @@ INSERT INTO orders (
     39.2155,
     'Kivukoni Front Harbor, Ilala',
     'pending',
+    '[{"item": "Tomatoes", "quantity": 80, "unit": "kg"}, {"item": "Onions", "quantity": 50, "unit": "kg"}]',
     NOW()
 );
 
