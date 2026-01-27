@@ -189,7 +189,16 @@
                     throw new Error('Failed to initialize Supabase - client not available');
                 }
                 
-                status.innerHTML = '<span class="spinner"></span>Inserting merchants...';
+                status.innerHTML = '<span class="spinner"></span>Clearing existing merchants...';
+
+                // Delete all existing merchants first to avoid duplicate key errors
+                await window.supabaseClient
+                    .from('merchant')
+                    .delete()
+                    .neq('id', '00000000-0000-0000-0000-000000000000');
+
+                status.innerHTML = '<span class="spinner"></span>Inserting 18 merchants...';
+
                 // Array of 18 demo merchants with GPS coordinates in Dar es Salaam
                 const merchants = [
                     // Ilala District
