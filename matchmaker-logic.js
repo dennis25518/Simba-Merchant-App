@@ -144,6 +144,18 @@ const MatchmakerEngine = {
 
             if (!merchants || merchants.length === 0) {
                 console.log('[MATCHMAKER] No merchants with GPS data found');
+                console.log('[MATCHMAKER] DEBUG: Checking for ANY merchants at all...');
+                
+                // Debug: Get count of all merchants
+                const { data: allMerchants, error: countError } = await supabase
+                    .from('merchant')
+                    .select('id, store_name, latitude, longitude', { count: 'exact' });
+                    
+                console.log('[MATCHMAKER] Total merchants in DB:', allMerchants ? allMerchants.length : 0);
+                if (allMerchants && allMerchants.length > 0) {
+                    console.log('[MATCHMAKER] Sample merchants (first 3):', allMerchants.slice(0, 3));
+                }
+                
                 return [];
             }
 
