@@ -128,7 +128,7 @@ const MatchmakerEngine = {
                 .from('merchant')
                 .select(`
                     id,
-                    partner_name,
+                    store_name,
                     latitude,
                     longitude,
                     phone,

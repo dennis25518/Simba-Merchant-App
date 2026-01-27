@@ -262,7 +262,7 @@
                 try {
                     const { data: merchants, error } = await window.supabaseClient
                         .from('merchant')
-                        .select('id, partner_name, email, phone, latitude, longitude')
+                        .select('id, store_name, email, phone, latitude, longitude')
                         .not('latitude', 'is', null)
                         .limit(1)
                         .single();
@@ -272,14 +272,14 @@
                         // Fallback to any merchant
                         const { data: fallbackMerchant } = await window.supabaseClient
                             .from('merchant')
-                            .select('id, partner_name, email, phone')
+                            .select('id, store_name, email, phone')
                             .limit(1)
                             .single();
                         
                         if (fallbackMerchant) {
                             const devMerchant = {
                                 id: fallbackMerchant.id,
-                                store_name: fallbackMerchant.partner_name,
+                                store_name: fallbackMerchant.store_name,
                                 email: fallbackMerchant.email,
                                 phone: fallbackMerchant.phone
                             };
@@ -294,7 +294,7 @@
                     // Create merchant object from database
                     const devMerchant = {
                         id: merchants.id,
-                        store_name: merchants.partner_name,
+                        store_name: merchants.store_name,
                         email: merchants.email,
                         phone: merchants.phone,
                         latitude: merchants.latitude,
