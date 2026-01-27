@@ -4,6 +4,9 @@
 // This replaces the previous matchmaker-logic.js
 // Place this in your Simba-Merchant-App repository
 
+// FEATURE FLAG: Set to true when merchant dashboard is active
+const MERCHANT_DASHBOARD_ACTIVE = false;
+
 const MatchmakerEngine = {
     
     /**
@@ -14,6 +17,22 @@ const MatchmakerEngine = {
         console.log(`[MATCHMAKER] Processing order ${order.id}`);
 
         try {
+            // TEMPORARY: If merchant dashboard is not active, mark all as manual required
+            if (!MERCHANT_DASHBOARD_ACTIVE) {
+                console.log(`[MATCHMAKER] Merchant dashboard inactive - marking order ${order.id} as manual required`);
+                const { error } = await supabase
+                    .from('orders')
+                    .update({
+                        order_status: 'manual_required',
+                        routing_error: 'MERCHANT_DASHBOARD_INACTIVE',
+                        routing_failed_at: new Date().toISOString()
+                    })
+                    .eq('id', order.id);
+
+                if (error) throw error;
+                return { success: false, error: 'MERCHANT_DASHBOARD_INACTIVE' };
+            }
+
             // Validate order has GPS data
             if (!order.delivery_latitude || !order.delivery_longitude) {
                 throw new Error('MISSING_GPS_COORDINATES');
