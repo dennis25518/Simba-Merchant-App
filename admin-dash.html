@@ -240,20 +240,27 @@
                     return;
                 }
 
+                // Update dashboard stats from database counts
+                updateOrdersCount(pendingCount || 0);
+                routingStats.autoMatched = autoMatchedCount || 0;
+                routingStats.manualRequired = manualRequiredCount || 0;
+                routingStats.failed = failedCount || 0;
+                
+                document.getElementById('auto-matched-count').textContent = routingStats.autoMatched;
+                document.getElementById('manual-required-count').textContent = routingStats.manualRequired;
+                document.getElementById('failed-count').textContent = routingStats.failed;
+
                 if (!pendingOrders || pendingOrders.length === 0) {
-                    console.log('[ADMIN] No pending orders');
-                    updateOrdersCount(0);
-                    // Update stats from database counts
-                    routingStats.autoMatched = autoMatchedCount || 0;
-                    routingStats.manualRequired = manualRequiredCount || 0;
-                    routingStats.failed = failedCount || 0;
+                    console.log('[ADMIN] No pending orders to process');
                     return;
                 }
 
-                console.log(`[ADMIN] Found ${pendingOrders.length} pending orders`);
+                console.log(`[ADMIN] Found ${pendingOrders.length} pending orders. Processing...`);
                 
                 // Process each pending order through matchmaker
                 let processedCount = 0;
+                let successCount = 0;
+                let failureCount = 0;
 
                 for (const order of pendingOrders) {
                     // Skip if already processed
@@ -262,25 +269,47 @@
                     }
 
                     try {
-                        const matched = await MatchmakerEngine.processOrder(order);
+                        // Call matchmaker with Supabase client reference
+                        const matched = await MatchmakerEngine.processOrder(order, window.supabaseClient);
                         ordersCache[order.id] = true;
                         processedCount++;
+                        if (matched.success) {
+                            successCount++;
+                            console.log(`✅ Order ${order.id} auto-matched to merchant ${matched.merchant?.id}`);
+                        } else {
+                            failureCount++;
+                            console.log(`⚠️ Order ${order.id} marked as manual required: ${matched.error}`);
+                        }
                     } catch (err) {
                         console.error(`[ADMIN] Error processing order ${order.id}:`, err);
                         ordersCache[order.id] = true;
                         processedCount++;
+                        failureCount++;
                     }
                 }
 
-                // Update dashboard stats from database counts (not incremental)
-                updateOrdersCount(pendingCount || 0);
-                routingStats.autoMatched = autoMatchedCount || 0;
-                routingStats.manualRequired = manualRequiredCount || 0;
-                routingStats.failed = failedCount || 0;
+                console.log(`[ADMIN] Processing complete. Processed: ${processedCount}, Success: ${successCount}, Manual: ${failureCount}`);
                 
-                document.getElementById('auto-matched-count').textContent = routingStats.autoMatched;
-                document.getElementById('manual-required-count').textContent = routingStats.manualRequired;
-                console.log(`[ADMIN] Processed ${processedCount} new orders. Stats: ${routingStats.autoMatched} auto-matched, ${routingStats.manualRequired} manual required, ${routingStats.failed} failed`);
+                // Refresh stats after processing
+                setTimeout(async () => {
+                    const { count: newAutoMatched } = await window.supabaseClient
+                        .from('orders')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('order_status', 'sent_to_merchant');
+
+                    const { count: newManualRequired } = await window.supabaseClient
+                        .from('orders')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('order_status', 'manual_required');
+
+                    routingStats.autoMatched = newAutoMatched || 0;
+                    routingStats.manualRequired = newManualRequired || 0;
+                    
+                    document.getElementById('auto-matched-count').textContent = routingStats.autoMatched;
+                    document.getElementById('manual-required-count').textContent = routingStats.manualRequired;
+                    
+                    console.log(`[ADMIN] Dashboard updated: ${routingStats.autoMatched} auto-matched, ${routingStats.manualRequired} manual required`);
+                }, 1000);
                 
                 // Refresh manual queue display
                 await refreshManualQueue();
