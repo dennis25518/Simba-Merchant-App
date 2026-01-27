@@ -13,6 +13,11 @@ INSERT INTO orders (
     delivery_address,
     order_status,
     order_items,
+    subtotal,
+    tax,
+    total_amount,
+    payment_status,
+    payment_method,
     created_at
 ) VALUES
 -- Order 1: City Center (Ilala) - Near Tabata
@@ -25,6 +30,11 @@ INSERT INTO orders (
     'Tabata Main Street, Ilala',
     'pending',
     '[{"item": "Rice", "quantity": 50, "unit": "kg"}, {"item": "Beans", "quantity": 25, "unit": "kg"}]',
+    45000.00,
+    4500.00,
+    49500.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -38,6 +48,11 @@ INSERT INTO orders (
     'Kariakoo Market, Ilala',
     'pending',
     '[{"item": "Cooking Oil", "quantity": 20, "unit": "liters"}, {"item": "Sugar", "quantity": 30, "unit": "kg"}]',
+    38000.00,
+    3800.00,
+    41800.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -51,6 +66,11 @@ INSERT INTO orders (
     'Msasani Business Plaza, Kinondoni',
     'pending',
     '[{"item": "Flour", "quantity": 100, "unit": "kg"}, {"item": "Salt", "quantity": 10, "unit": "kg"}]',
+    52000.00,
+    5200.00,
+    57200.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -64,6 +84,11 @@ INSERT INTO orders (
     'Oysterbay Commercial Area, Kinondoni',
     'pending',
     '[{"item": "Maize Meal", "quantity": 75, "unit": "kg"}, {"item": "Pasta", "quantity": 40, "unit": "kg"}]',
+    55000.00,
+    5500.00,
+    60500.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -77,6 +102,11 @@ INSERT INTO orders (
     'Sinza Housing Estate, Kinondoni',
     'pending',
     '[{"item": "Tea", "quantity": 15, "unit": "kg"}, {"item": "Coffee", "quantity": 10, "unit": "kg"}]',
+    35000.00,
+    3500.00,
+    38500.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -90,6 +120,11 @@ INSERT INTO orders (
     'Makumbusho Market Area, Ubungo',
     'pending',
     '[{"item": "Honey", "quantity": 5, "unit": "liters"}, {"item": "Spices", "quantity": 3, "unit": "kg"}]',
+    28000.00,
+    2800.00,
+    30800.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -103,6 +138,11 @@ INSERT INTO orders (
     'Chalinze Trading Zone, Temeke',
     'pending',
     '[{"item": "Eggs", "quantity": 500, "unit": "pieces"}, {"item": "Butter", "quantity": 20, "unit": "kg"}]',
+    62000.00,
+    6200.00,
+    68200.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -116,6 +156,11 @@ INSERT INTO orders (
     'Kigamboni Port Area, Ubungo',
     'pending',
     '[{"item": "Fish Powder", "quantity": 12, "unit": "kg"}, {"item": "Dried Fish", "quantity": 25, "unit": "kg"}]',
+    48000.00,
+    4800.00,
+    52800.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 ),
 
@@ -129,6 +174,11 @@ INSERT INTO orders (
     'Kivukoni Front Harbor, Ilala',
     'pending',
     '[{"item": "Tomatoes", "quantity": 80, "unit": "kg"}, {"item": "Onions", "quantity": 50, "unit": "kg"}]',
+    32000.00,
+    3200.00,
+    35200.00,
+    'pending',
+    'cash_on_delivery',
     NOW()
 );
 
