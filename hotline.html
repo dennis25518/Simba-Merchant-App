@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotline | Simba Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; overflow: hidden; }
+        
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
+        #sidebar.collapsed { width: 85px; }
+        #sidebar.collapsed .sidebar-text, #sidebar.collapsed .logo-text { display: none; }
+        #sidebar.collapsed .nav-item { justify-content: center; }
+        
+        .stat-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .contact-card { background: white; border-radius: 20px; padding: 20px; border: 2px solid #fee2e2; transition: all 0.3s ease; }
+        .contact-card:hover { box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.1); transform: translateY(-2px); }
+        
+        .call-button { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); transition: all 0.3s ease; }
+        .call-button:hover { transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.3); }
+        .call-button:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <aside id="sidebar" class="bg-slate-900 h-full flex flex-col py-8 shrink-0 relative">
+        <button onclick="toggleSidebar()" class="absolute -right-3 top-10 bg-red-600 text-white rounded-full p-1 shadow-lg z-50">
+            <i data-lucide="chevron-left" id="toggleIcon" class="w-4 h-4"></i>
+        </button>
+
+        <div class="px-6 mb-12 flex items-center gap-3">
+            <i data-lucide="shield-check" class="text-red-600 w-8 h-8 shrink-0"></i>
+            <h1 class="text-white font-black italic text-xl uppercase tracking-tighter logo-text">SIMBA <span class="text-red-600">ADMIN</span></h1>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-4">
+            <a href="admin-dash.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="layout-dashboard" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Dashboard</span>
+            </a>
+
+            <a href="manual-match.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <div class="flex items-center gap-4">
+                    <i data-lucide="git-pull-request" class="shrink-0"></i>
+                    <span class="sidebar-text font-bold">Manual Match</span>
+                </div>
+            </a>
+
+            <a href="hotline.html" class="nav-item flex items-center gap-4 p-4 bg-red-600 text-white rounded-2xl">
+                <i data-lucide="phone-forwarded" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Hotline</span>
+            </a>
+        </nav>
+
+        <div class="px-4 mt-auto border-t border-slate-800 pt-6 space-y-2">
+            <button class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="settings" class="shrink-0"></i>
+                <span class="sidebar-text font-bold text-sm">Settings</span>
+            </button>
+            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all group">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0 group-hover:bg-red-600">AD</div>
+                <span class="sidebar-text font-bold text-sm">Admin Profile</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-end mb-10">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900">Direct Hotline</h2>
+                <p class="text-slate-500 font-medium">Emergency contact and communication hub.</p>
+            </div>
+            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border font-bold text-slate-700">
+                <i data-lucide="calendar" class="inline w-4 h-4 mr-2"></i> Today: <span id="currentDate">--</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="phone"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Online Merchants</p>
+                <h3 id="online-merchants-count" class="text-3xl font-black text-red-600">0</h3>
+            </div>
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="truck"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Drivers</p>
+                <h3 id="available-drivers-count" class="text-3xl font-black text-blue-600">0</h3>
+            </div>
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="activity"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">System Status</p>
+                <h3 class="text-3xl font-black text-green-600">✓</h3>
+            </div>
+        </div>
+
+        <!-- Merchants Section -->
+        <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 mb-10">
+            <div class="flex items-center gap-3 mb-8">
+                <i data-lucide="store" class="w-6 h-6 text-red-600"></i>
+                <h3 class="text-2xl font-black uppercase italic text-slate-900">Merchants on Call</h3>
+            </div>
+            
+            <div id="merchantsHotline" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Merchants will be loaded here -->
+            </div>
+
+            <div id="noMerchantsMsg" class="text-center py-12">
+                <i data-lucide="inbox" class="w-16 h-16 text-slate-300 mx-auto mb-4"></i>
+                <p class="text-slate-500 font-bold">No merchants available</p>
+            </div>
+        </div>
+
+        <!-- Drivers Section -->
+        <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
+            <div class="flex items-center gap-3 mb-8">
+                <i data-lucide="navigation" class="w-6 h-6 text-blue-600"></i>
+                <h3 class="text-2xl font-black uppercase italic text-slate-900">Drivers Network</h3>
+            </div>
+            
+            <div id="driversHotline" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Drivers will be loaded here -->
+            </div>
+
+            <div id="noDriversMsg" class="text-center py-12">
+                <i data-lucide="inbox" class="w-16 h-16 text-slate-300 mx-auto mb-4"></i>
+                <p class="text-slate-500 font-bold">No drivers available</p>
+            </div>
+        </div>
+
+        <!-- Emergency Info Footer -->
+        <div class="bg-gradient-to-r from-red-600 to-red-800 rounded-[32px] p-8 text-white mt-10 shadow-lg">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h4 class="text-lg font-black uppercase mb-2">⚠️ Emergency Protocol</h4>
+                    <p class="text-red-100 text-sm">All calls are recorded for quality assurance. Response time: < 2 minutes</p>
+                </div>
+                <i data-lucide="alert-circle" class="w-12 h-12 text-red-200"></i>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('sw-TZ', options);
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            sidebar.classList.toggle('collapsed');
+            icon.style.transform = sidebar.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        async function loadHotlineContacts() {
+            try {
+                if (!window.supabaseClient) {
+                    console.error('[HOTLINE] Supabase not ready');
+                    return;
+                }
+
+                // Load merchants
+                const { data: merchants, error: merchantError } = await window.supabaseClient
+                    .from('merchant')
+                    .select('id, store_name, phone, email, status')
+                    .eq('status', 'active')
+                    .limit(20);
+
+                if (!merchantError && merchants) {
+                    const container = document.getElementById('merchantsHotline');
+                    const noMsg = document.getElementById('noMerchantsMsg');
+
+                    if (merchants.length === 0) {
+                        container.innerHTML = '';
+                        noMsg.style.display = 'block';
+                    } else {
+                        noMsg.style.display = 'none';
+                        container.innerHTML = merchants.map(merchant => `
+                            <div class="contact-card">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 text-lg">${merchant.store_name}</h4>
+                                        <p class="text-xs text-slate-500 mt-1">Store ID: ${merchant.id.substring(0, 8)}...</p>
+                                    </div>
+                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">ONLINE</span>
+                                </div>
+                                
+                                <div class="space-y-2 mb-4 text-sm">
+                                    <div class="flex items-center gap-2 text-slate-600">
+                                        <i data-lucide="phone" class="w-4 h-4"></i>
+                                        <span>${merchant.phone}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-slate-600">
+                                        <i data-lucide="mail" class="w-4 h-4"></i>
+                                        <span class="text-xs">${merchant.email}</span>
+                                    </div>
+                                </div>
+
+                                <button onclick="makeCall('${merchant.phone}')" class="call-button w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:shadow-lg">
+                                    <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Call Merchant
+                                </button>
+                            </div>
+                        `).join('');
+                        lucide.createIcons();
+                    }
+
+                    const { count: merchantCount } = await window.supabaseClient
+                        .from('merchant')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'active');
+                    document.getElementById('online-merchants-count').textContent = merchantCount || 0;
+                }
+
+                // Load drivers (note: you may need to create a drivers table)
+                const driversContainer = document.getElementById('driversHotline');
+                const noDriversMsg = document.getElementById('noDriversMsg');
+                driversContainer.innerHTML = '';
+                noDriversMsg.innerHTML = '<p class="text-slate-500 font-bold">Driver management coming soon</p>';
+                
+            } catch (error) {
+                console.error('[HOTLINE] Error loading contacts:', error);
+            }
+        }
+
+        function makeCall(phoneNumber) {
+            // In a real app, this would integrate with a VoIP provider
+            // For now, we'll show a modal or attempt to trigger a phone call
+            alert(`📞 Initiating call to: ${phoneNumber}\n\n(In production, this would connect to your VoIP system)`);
+            
+            // Attempt to open tel: link (works on mobile devices)
+            window.location.href = `tel:${phoneNumber}`;
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // Load data on page load
+        setTimeout(() => {
+            loadHotlineContacts();
+            setInterval(loadHotlineContacts, 30000); // Refresh every 30 seconds
+        }, 1000);
+    </script>
+</body>
+</html>

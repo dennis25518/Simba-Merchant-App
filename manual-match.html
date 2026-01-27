@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Match | Simba Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; overflow: hidden; }
+        
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
+        #sidebar.collapsed { width: 85px; }
+        #sidebar.collapsed .sidebar-text, #sidebar.collapsed .logo-text { display: none; }
+        #sidebar.collapsed .nav-item { justify-content: center; }
+        
+        .stat-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .order-card { background: white; border-radius: 24px; padding: 20px; border: 2px solid #fde68a; transition: all 0.3s ease; }
+        .order-card:hover { box-shadow: 0 20px 25px -5px rgba(251, 146, 60, 0.2); transform: translateY(-2px); }
+        
+        .merchant-option { background: #f8fafc; border-radius: 16px; padding: 16px; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.3s ease; }
+        .merchant-option:hover { background: #e0f2fe; border-color: #0284c7; }
+        .merchant-option.selected { background: #cffafe; border-color: #06b6d4; }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <aside id="sidebar" class="bg-slate-900 h-full flex flex-col py-8 shrink-0 relative">
+        <button onclick="toggleSidebar()" class="absolute -right-3 top-10 bg-red-600 text-white rounded-full p-1 shadow-lg z-50">
+            <i data-lucide="chevron-left" id="toggleIcon" class="w-4 h-4"></i>
+        </button>
+
+        <div class="px-6 mb-12 flex items-center gap-3">
+            <i data-lucide="shield-check" class="text-red-600 w-8 h-8 shrink-0"></i>
+            <h1 class="text-white font-black italic text-xl uppercase tracking-tighter logo-text">SIMBA <span class="text-red-600">ADMIN</span></h1>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-4">
+            <a href="admin-dash.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="layout-dashboard" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Dashboard</span>
+            </a>
+
+            <a href="manual-match.html" class="nav-item flex items-center justify-between p-4 bg-orange-600 text-white rounded-2xl">
+                <div class="flex items-center gap-4">
+                    <i data-lucide="git-pull-request" class="shrink-0"></i>
+                    <span class="sidebar-text font-bold">Manual Match</span>
+                </div>
+                <span id="manual-count" class="sidebar-text bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black">0</span>
+            </a>
+
+            <a href="hotline.html" class="nav-item flex items-center gap-4 p-4 text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="phone-forwarded" class="shrink-0"></i> 
+                <span class="sidebar-text font-bold">Hotline</span>
+            </a>
+        </nav>
+
+        <div class="px-4 mt-auto border-t border-slate-800 pt-6 space-y-2">
+            <button class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <i data-lucide="settings" class="shrink-0"></i>
+                <span class="sidebar-text font-bold text-sm">Settings</span>
+            </button>
+            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all group">
+                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0 group-hover:bg-red-600">AD</div>
+                <span class="sidebar-text font-bold text-sm">Admin Profile</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-end mb-10">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900">Manual Order Matching</h2>
+                <p class="text-slate-500 font-medium">Manually assign orders to merchants when auto-routing fails.</p>
+            </div>
+            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border font-bold text-slate-700">
+                <i data-lucide="calendar" class="inline w-4 h-4 mr-2"></i> Today: <span id="currentDate">--</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="git-pull-request"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending Manual</p>
+                <h3 id="pending-manual-count" class="text-3xl font-black text-orange-600">0</h3>
+            </div>
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="check-circle"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Matched Today</p>
+                <h3 id="matched-today-count" class="text-3xl font-black text-green-600">0</h3>
+            </div>
+            <div class="stat-card">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4"><i data-lucide="users"></i></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Merchants</p>
+                <h3 id="active-merchants-count" class="text-3xl font-black text-blue-600">0</h3>
+            </div>
+        </div>
+
+        <!-- Manual Orders Queue -->
+        <div id="noOrdersMessage" class="text-center py-12 bg-white rounded-[32px] border-2 border-dashed border-slate-300">
+            <i data-lucide="inbox" class="w-16 h-16 text-slate-300 mx-auto mb-4"></i>
+            <p class="text-slate-500 font-bold text-lg">No orders requiring manual matching</p>
+            <p class="text-slate-400 text-sm mt-2">All orders are either auto-matched or completed.</p>
+        </div>
+
+        <div id="manualOrdersList" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+
+        <!-- Assignment Panel (Hidden until order selected) -->
+        <div id="assignmentPanel" class="hidden mt-10 bg-white rounded-[32px] border-2 border-blue-200 p-8 shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-black uppercase italic text-blue-900">Assign Merchant</h3>
+                <button onclick="closeAssignment()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div id="selectedOrderInfo" class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
+                <p class="text-sm text-slate-600"><span class="font-bold">Order ID:</span> <span id="selectedOrderId">--</span></p>
+                <p class="text-sm text-slate-600"><span class="font-bold">Customer:</span> <span id="selectedOrderCustomer">--</span></p>
+                <p class="text-sm text-slate-600"><span class="font-bold">Delivery Location:</span> <span id="selectedOrderLocation">--</span></p>
+            </div>
+
+            <h4 class="font-bold text-slate-900 mb-4 uppercase text-sm">Select Merchant</h4>
+            <div id="merchantsList" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
+
+            <div class="flex gap-4">
+                <button onclick="assignOrderToMerchant()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
+                    <i data-lucide="check" class="inline w-4 h-4 mr-2"></i> Assign Order
+                </button>
+                <button onclick="closeAssignment()" class="flex-1 bg-slate-300 hover:bg-slate-400 text-slate-900 font-bold py-3 rounded-xl transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('sw-TZ', options);
+
+        let selectedOrderId = null;
+        let selectedMerchantId = null;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            sidebar.classList.toggle('collapsed');
+            icon.style.transform = sidebar.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        async function loadManualOrders() {
+            try {
+                if (!window.supabaseClient) {
+                    console.error('[MANUAL] Supabase not ready');
+                    return;
+                }
+
+                // Fetch orders that are manual_required
+                const { data: manualOrders, error } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('order_status', 'manual_required')
+                    .limit(50);
+
+                if (error) throw error;
+
+                const { count: manualCount } = await window.supabaseClient
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('order_status', 'manual_required');
+
+                document.getElementById('pending-manual-count').textContent = manualCount || 0;
+
+                const listContainer = document.getElementById('manualOrdersList');
+                const noOrdersMsg = document.getElementById('noOrdersMessage');
+
+                if (!manualOrders || manualOrders.length === 0) {
+                    listContainer.innerHTML = '';
+                    noOrdersMsg.style.display = 'block';
+                    return;
+                }
+
+                noOrdersMsg.style.display = 'none';
+                listContainer.innerHTML = manualOrders.map(order => `
+                    <div class="order-card cursor-pointer" onclick="selectOrder('${order.id}', '${order.customer_name}', '${order.delivery_address}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-900">Order #${order.id}</h4>
+                                <p class="text-sm text-orange-600 font-bold">Manual Required</p>
+                            </div>
+                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">PENDING</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <p><span class="font-bold">Customer:</span> ${order.customer_name}</p>
+                            <p><span class="font-bold">Phone:</span> ${order.customer_phone}</p>
+                            <p><span class="font-bold">Location:</span> ${order.delivery_address}</p>
+                            <p><span class="font-bold">Items:</span> ${order.order_items ? Object.keys(order.order_items).length : 0} item(s)</p>
+                            <p><span class="font-bold">Total:</span> Tsh ${order.total_amount?.toLocaleString() || '0'}</p>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <button class="w-full bg-orange-100 text-orange-700 font-bold py-2 rounded-lg hover:bg-orange-200 transition-all">
+                                Assign Merchant →
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('[MANUAL] Error loading orders:', error);
+            }
+        }
+
+        async function selectOrder(orderId, customerName, location) {
+            selectedOrderId = orderId;
+            selectedMerchantId = null;
+            
+            document.getElementById('selectedOrderId').textContent = orderId;
+            document.getElementById('selectedOrderCustomer').textContent = customerName;
+            document.getElementById('selectedOrderLocation').textContent = location;
+            
+            await loadMerchantsList();
+            document.getElementById('assignmentPanel').classList.remove('hidden');
+            document.getElementById('assignmentPanel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function loadMerchantsList() {
+            try {
+                const { data: merchants, error } = await window.supabaseClient
+                    .from('merchant')
+                    .select('id, store_name, phone, email, latitude, longitude')
+                    .eq('status', 'active')
+                    .not('latitude', 'is', null)
+                    .not('longitude', 'is', null)
+                    .limit(50);
+
+                if (error) throw error;
+
+                const { count: merchantCount } = await window.supabaseClient
+                    .from('merchant')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'active');
+
+                document.getElementById('active-merchants-count').textContent = merchantCount || 0;
+
+                const listContainer = document.getElementById('merchantsList');
+                listContainer.innerHTML = (merchants || []).map(merchant => `
+                    <div class="merchant-option" onclick="selectMerchant('${merchant.id}')">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h5 class="font-bold text-slate-900">${merchant.store_name}</h5>
+                                <p class="text-xs text-slate-600 mt-1">${merchant.phone}</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Email: ${merchant.email}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('[MANUAL] Error loading merchants:', error);
+            }
+        }
+
+        function selectMerchant(merchantId) {
+            selectedMerchantId = merchantId;
+            
+            document.querySelectorAll('.merchant-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+        }
+
+        async function assignOrderToMerchant() {
+            if (!selectedOrderId || !selectedMerchantId) {
+                alert('Please select both an order and a merchant');
+                return;
+            }
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('orders')
+                    .update({
+                        order_status: 'sent_to_merchant',
+                        assigned_merchant_id: selectedMerchantId
+                    })
+                    .eq('id', selectedOrderId);
+
+                if (error) throw error;
+
+                alert('✅ Order assigned successfully!');
+                closeAssignment();
+                loadManualOrders();
+            } catch (error) {
+                console.error('[MANUAL] Assignment error:', error);
+                alert('❌ Failed to assign order: ' + error.message);
+            }
+        }
+
+        function closeAssignment() {
+            selectedOrderId = null;
+            selectedMerchantId = null;
+            document.getElementById('assignmentPanel').classList.add('hidden');
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // Load data on page load
+        setTimeout(() => {
+            loadManualOrders();
+            setInterval(loadManualOrders, 30000); // Refresh every 30 seconds
+        }, 1000);
+    </script>
+</body>
+</html>
