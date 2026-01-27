@@ -61,13 +61,15 @@
         </nav>
 
         <div class="px-4 mt-auto border-t border-slate-800 pt-6 space-y-2">
-            <button class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
-                <i data-lucide="settings" class="shrink-0"></i>
-                <span class="sidebar-text font-bold text-sm">Settings</span>
-            </button>
-            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all group">
-                <div class="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0 group-hover:bg-red-600">M</div>
-                <span class="sidebar-text font-bold text-sm">Profile Logout</span>
+            <a href="merchant-profile.html" class="nav-item flex items-center justify-center lg:justify-start gap-3 p-3 w-full text-slate-400 hover:bg-slate-800 rounded-2xl transition-all">
+                <div class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">
+                    <span id="profileInitials">M</span>
+                </div>
+                <span class="sidebar-text font-bold text-sm">Profile</span>
+            </a>
+            <button onclick="handleLogout()" class="nav-item flex items-center gap-4 p-3 w-full text-slate-400 hover:bg-red-900/30 rounded-2xl transition-all">
+                <i data-lucide="log-out" class="shrink-0"></i>
+                <span class="sidebar-text font-bold text-sm">Logout</span>
             </button>
         </div>
     </aside>
@@ -349,7 +351,19 @@
             }, 1000);
         }
         
-        window.addEventListener('DOMContentLoaded', checkAuth);
+        window.addEventListener('DOMContentLoaded', () => {
+            updateProfileInitials();
+            checkAuth();
+        });
+
+        function updateProfileInitials() {
+            const merchantInfo = JSON.parse(localStorage.getItem('merchantInfo') || '{"email":"merchant@simba.local"}');
+            const email = merchantInfo.email || 'merchant@simba.local';
+            const parts = email.split('@')[0].split('.');
+            const initials = parts.map(p => p[0].toUpperCase()).join('').substring(0, 2);
+            const initialsEl = document.getElementById('profileInitials');
+            if (initialsEl) initialsEl.textContent = initials;
+        }
 
         function closeModal() {
             document.getElementById('dispatchModal').classList.add('hidden');
