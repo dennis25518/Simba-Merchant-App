@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ShoppingBag, ClipboardList, Package, BarChart3, Settings, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ShoppingBag, ClipboardList, Package, BarChart3, Settings, LayoutDashboard, ChevronLeft, ChevronRight, X, Menu } from 'lucide-react'
 
 interface SidebarProps {
   merchantName?: string
@@ -10,27 +10,65 @@ interface SidebarProps {
 export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: SidebarProps) {
   const location = useLocation()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const isActive = (path: string) => location.pathname === path
+  
+  const closeMobileMenu = () => setIsMobileOpen(false)
 
   return (
-    <aside className={`h-screen bg-white border-r border-slate-200 sticky top-0 hidden lg:flex flex-col transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="lg:hidden fixed bottom-6 right-6 z-50 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition"
+        title="Toggle menu"
+      >
+        {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`h-screen bg-white border-r border-slate-200 sticky top-0 flex lg:flex flex-col transition-all duration-300 z-40 ${
+        isCollapsed ? 'w-20' : 'w-64'
+      } ${
+        isMobileOpen ? 'fixed left-0 top-0' : 'hidden lg:flex'
+      }`}>
       <div className="p-6 flex items-center justify-between">
         {!isCollapsed && <h1 className="text-xl font-extrabold text-red-600 flex items-center gap-2">
           <LayoutDashboard className="w-5 h-5" /> SIMBA
         </h1>}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 hover:bg-slate-100 rounded-lg transition"
-          title={isCollapsed ? 'Expand' : 'Collapse'}
-        >
-          {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {isMobileOpen && (
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-1 hover:bg-slate-100 rounded-lg transition"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1 hover:bg-slate-100 rounded-lg transition hidden lg:block"
+            title={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-1">
         <Link
           to="/dashboard"
+          onClick={closeMobileMenu}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
             isActive('/dashboard') ? 'sidebar-active' : 'text-slate-600 hover:bg-slate-50'
           }`}
@@ -41,6 +79,7 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
         </Link>
         <Link
           to="/history"
+          onClick={closeMobileMenu}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
             isActive('/history') ? 'sidebar-active' : 'text-slate-600 hover:bg-slate-50'
           }`}
@@ -51,6 +90,7 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
         </Link>
         <Link
           to="/inventory"
+          onClick={closeMobileMenu}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
             isActive('/inventory') ? 'sidebar-active' : 'text-slate-600 hover:bg-slate-50'
           }`}
@@ -61,6 +101,7 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
         </Link>
         <Link
           to="/payouts"
+          onClick={closeMobileMenu}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
             isActive('/payouts') ? 'sidebar-active' : 'text-slate-600 hover:bg-slate-50'
           }`}
@@ -71,6 +112,7 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
         </Link>
         <Link
           to="/settings"
+          onClick={closeMobileMenu}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
             isActive('/settings') ? 'sidebar-active' : 'text-slate-600 hover:bg-slate-50'
           }`}
@@ -84,6 +126,7 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
       <div className="p-4 border-t border-slate-100">
         <Link
           to="/profile"
+          onClick={closeMobileMenu}
           className="bg-slate-50 p-3 rounded-xl flex items-center gap-3 hover:bg-slate-100 transition cursor-pointer"
           title={merchantName}
         >
@@ -97,5 +140,6 @@ export function Sidebar({ merchantName = 'Simba Mart', merchantId = '#88219' }: 
         </Link>
       </div>
     </aside>
+    </>
   )
 }

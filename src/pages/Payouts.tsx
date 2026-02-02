@@ -75,11 +75,11 @@ export function Payouts() {
       <main className="flex-1">
         <Header merchantName={merchant?.merchant_name} merchantId={merchant?.merchant_id} />
 
-        <div className="max-w-6xl mx-auto p-6 md:p-12">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-12">
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10">
             <div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900">Financial Insights</h2>
-              <p className="text-slate-500 font-medium">Track your revenue and manage settlement requests.</p>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Financial Insights</h2>
+              <p className="text-slate-500 font-medium text-sm md:text-base">Track your revenue and manage settlement requests.</p>
             </div>
             <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200">
               <button

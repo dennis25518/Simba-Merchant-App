@@ -111,26 +111,26 @@ export function Dashboard() {
       <main className="flex-1 flex flex-col min-h-screen">
         <Header merchantName={merchant?.merchant_name} merchantId={merchant?.merchant_id} />
 
-        <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <p className="text-xs font-bold text-slate-500 uppercase">Incoming</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{incomingOrders.length}</h3>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <p className="text-xs font-bold text-slate-500 uppercase">Preparing</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{preparingOrders.length}</h3>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <p className="text-xs font-bold text-slate-500 uppercase">Ready</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{readyOrders.length}</h3>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <p className="text-xs font-bold text-slate-500 uppercase">Total Today</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{allOrders.length}</h3>
           </div>
         </div>
 
-        <div className="px-8 flex-1">
+        <div className="px-4 md:px-8 flex-1">
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm h-full overflow-hidden flex flex-col">
             <div className="flex items-center gap-8 px-8 border-b border-slate-100">
               <button

@@ -106,7 +106,7 @@ export function Profile() {
       <main className="flex-1 flex flex-col min-h-screen">
         <Header merchantName={merchant?.merchant_name} merchantId={merchant?.merchant_id} />
 
-        <div className="p-8 md:p-12">
+        <div className="p-4 md:p-6 lg:p-12">
           {/* Debug info - remove later */}
           {merchantLoading && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-blue-600 text-sm font-semibold flex items-center gap-2">
@@ -114,17 +114,17 @@ export function Profile() {
             </div>
           )}
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 bg-red-600 rounded-3xl shadow-lg shadow-red-200 flex items-center justify-center text-white text-2xl font-black">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10">
+            <div className="flex items-center gap-4 md:gap-5">
+              <div className="w-16 md:w-20 h-16 md:h-20 bg-red-600 rounded-3xl shadow-lg shadow-red-200 flex items-center justify-center text-white text-xl md:text-2xl font-black">
                 {getInitials(formData.merchant_name)}
               </div>
               <div>
-                <h2 className="text-4xl font-black tracking-tight">{formData.merchant_name || 'Welcome'}</h2>
-                <p className="text-slate-500 font-medium">Manage your business identity & security</p>
+                <h2 className="text-2xl md:text-4xl font-black tracking-tight">{formData.merchant_name || 'Welcome'}</h2>
+                <p className="text-slate-500 font-medium text-sm md:text-base">Manage your business identity & security</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-widest">
                 Verified Merchant
               </span>

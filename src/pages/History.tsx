@@ -149,11 +149,11 @@ export function History() {
       <main className="flex-1">
         <Header merchantName={merchant?.merchant_name} merchantId={merchant?.merchant_id} />
 
-        <div className="max-w-6xl mx-auto p-6 md:p-12">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-12">
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight">Order Archive</h2>
-              <p className="text-slate-500 font-medium">Review and audit all past merchant transactions.</p>
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Order Archive</h2>
+              <p className="text-slate-500 font-medium text-sm md:text-base">Review and audit all past merchant transactions.</p>
             </div>
 
             <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">

@@ -104,23 +104,23 @@ export function Inventory() {
       <main className="flex-1">
         <Header merchantName={merchant?.merchant_name} merchantId={merchant?.merchant_id} />
 
-        <div className="max-w-6xl mx-auto p-6 md:p-12">
-          <header className="mb-10">
-            <h2 className="text-3xl font-extrabold tracking-tight">Inventory Management</h2>
-            <p className="text-slate-500 font-medium">Track your product stock levels and plan refills to avoid running out of stock.</p>
+        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-12">
+          <header className="mb-8 md:mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Inventory Management</h2>
+            <p className="text-slate-500 font-medium text-sm md:text-base">Track your product stock levels and plan refills to avoid running out of stock.</p>
           </header>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
+            <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
               <p className="text-xs font-bold text-slate-500 uppercase">Total Products</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{stats.totalProducts}</h3>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-green-200 shadow-sm">
+            <div className="bg-white p-4 md:p-6 rounded-2xl border border-green-200 shadow-sm">
               <p className="text-xs font-bold text-green-600 uppercase">✓ Good Stock</p>
               <h3 className="text-2xl font-black text-green-700 mt-1">{stats.goodStock}</h3>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-yellow-200 shadow-sm">
+            <div className="bg-white p-4 md:p-6 rounded-2xl border border-yellow-200 shadow-sm">
               <p className="text-xs font-bold text-yellow-600 uppercase">⚠ Low Stock</p>
               <h3 className="text-2xl font-black text-yellow-700 mt-1">{stats.warningStock}</h3>
             </div>
